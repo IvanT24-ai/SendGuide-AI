@@ -71,9 +71,9 @@
         
         <!-- HEADER -->
         <div class="bg-gray-800 p-6 text-center border-b border-gray-700 relative">
-            <div class="absolute top-4 right-4 text-gray-500 text-xs">v6.4-fix</div>
+            <div class="absolute top-4 right-4 text-gray-500 text-xs">v7.0-PRO</div>
             <h1 class="text-3xl font-bold tracking-tighter"><i class="fa-solid fa-mountain text-yellow-400 mr-2"></i>SendGuide</h1>
-            <p class="text-gray-400 text-sm mt-1">Live AI Shoe Sizing</p>
+            <p class="text-gray-400 text-sm mt-1">Expert AI Sizing & Reviews</p>
         </div>
 
         <!-- INPUT FORM -->
@@ -165,9 +165,8 @@
                 <input type="range" id="budget" min="80" max="250" value="180" class="w-full" oninput="document.getElementById('budgetLabel').innerText = this.value">
             </div>
             
-            <!-- RE-ADDED: Fit Preference -->
+            <!-- Fit Preference -->
             <div>
-                <!-- FIX: Corrected the closing </label> tag -->
                 <div class="flex justify-between text-sm text-gray-300 mb-2">
                     <label class="font-medium">Fit Preference</label>
                     <span class="font-bold text-yellow-400"><span id="fitLabel">Performance</span></span>
@@ -191,7 +190,7 @@
             
             <div class="text-center mb-6 animate-fade-in" style="animation-delay: 0ms;">
                 <div class="inline-block p-2 px-4 bg-green-900 text-green-300 rounded-full text-xs font-bold mb-2">
-                    <i class="fa-solid fa-check-circle mr-1"></i> AI Match Found
+                    <i class="fa-solid fa-check-circle mr-1"></i> Expert Choice
                 </div>
                 <h2 class="text-2xl font-bold text-white" id="resultModel">Loading...</h2>
                 <p class="text-yellow-400 text-3xl font-bold mt-2" id="resultSize">EU 00.0</p>
@@ -210,7 +209,7 @@
             <!-- Analysis Card -->
             <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 200ms;">
                 <div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>
-                <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-brain mr-2 text-yellow-400"></i>AI Sizing Rationale</h3>
+                <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-brain mr-2 text-yellow-400"></i>Sizing Logic & Consensus</h3>
                 <p class="text-gray-300 text-sm leading-relaxed" id="resultLogic">
                     Loading analysis...
                 </p>
@@ -219,8 +218,8 @@
             <!-- Live Data Sources -->
             <div id="scrapedSourcesCard" class="hidden bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 300ms;">
                 <div class="absolute top-0 left-0 w-1 h-full bg-cyan-400"></div>
-                <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-globe mr-2 text-cyan-400"></i>Live Data Sources</h3>
-                <p class="text-gray-400 text-xs mb-3">AI analysis was grounded on real-time data from:</p>
+                <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-globe mr-2 text-cyan-400"></i>Verified Sources</h3>
+                <p class="text-gray-400 text-xs mb-3">Sizing data verified against community consensus from:</p>
                 <div id="scrapedSourcesList" class="space-y-2">
                     <!-- Links will be injected here -->
                 </div>
@@ -289,7 +288,6 @@
             }
         }
         
-        // RE-ADDED: Update fit label
         function updateFitLabel(value) {
             const label = document.getElementById('fitLabel');
             if (value < 30) label.innerText = "Comfort";
@@ -395,7 +393,7 @@
         // --- 4. THE CORE LOGIC ---
 
         async function calculateFit() {
-            showLoading(true, "Checking bergfreunde.eu stock...");
+            showLoading(true, "Searching for proven shoes & reviews...");
 
             // Get All Inputs
             const streetSize = parseFloat(document.getElementById('streetSize').value);
@@ -407,26 +405,34 @@
             const pref = parseInt(document.getElementById('fitPref').value);
             let fitText = (pref < 30) ? "Comfort Fit" : (pref < 70) ? "Balanced Fit" : "Aggressive Performance Fit";
 
-            // --- ✨ STEP 1: Grounded Search Call (With Stock Check) ---
+            // --- ✨ STEP 1: Quality-Controlled Grounded Search ---
             const systemPrompt_Search = `
-                You are a gear expert. Your goal is to find 3-5 top-rated shoes *specifically from bergfreunde.eu* based on the user's criteria.
-                For each shoe, you *must* find:
-                1. Brand
-                2. Model
-                3. Current price in Euros (€)
-                4. Any discount/sale info
-                5. The *direct product URL* from bergfreunde.eu (if available, otherwise null)
-                6. Stock Status (e.g., 'In Stock', 'Out of Stock', 'Limited Sizes')
+                You are an expert buyer for a climbing shop. 
+                Your goal is to find 3-5 top-rated, WELL-REVIEWED shoes on bergfreunde.eu.
                 
-                Do not add any conversational text, just the list.
+                CRITICAL QUALITY CONTROL RULES:
+                1. DO NOT recommend brand new, unproven models.
+                2. ONLY pick shoes with established reputations and user reviews.
+                3. Prioritize shoes that are 'Classics' or 'Best Sellers'.
+                
+                For each shoe, find:
+                1. Brand & Model
+                2. Price in €
+                3. Sale Info
+                4. Stock Status
+                5. Link
+                
+                Also, briefly check for 'sizing consensus' (e.g. 'generally runs small').
             `;
             const userPrompt_Search = `
-                Find 3-5 top-rated climbing shoes for 2025 *on bergfreunde.eu* (site:bergfreunde.eu).
-                - Climber Level: ${level}
-                - Foot Shape: ${shape}
-                - Primary Style: ${style}
-                - Shoe Type: ${shoeType}
-                - Max Budget: €${budget}
+                Find 3-5 proven, high-rated climbing shoes for 2025 on bergfreunde.eu.
+                - Level: ${level}
+                - Shape: ${shape}
+                - Style: ${style}
+                - Type: ${shoeType}
+                - Budget: €${budget}
+                
+                Verify that these shoes are IN STOCK.
             `;
             
             let scrapedShoeList = "";
@@ -441,53 +447,57 @@
                 scrapedShoeList = "Live search failed. Using internal database.";
             }
 
-            // --- ✨ STEP 2: AI Recommendation Call (With Stock Filter) ---
-            showLoading(true, "Analyzing profile...");
+            // --- ✨ STEP 2: Expert Analysis with SIZING ALGORITHM ---
+            showLoading(true, "Calculating perfect fit...");
             const shoeDBString = JSON.stringify(SHOE_DB, null, 2);
 
             const systemPrompt_Shoe = `
-                You are SendGuide, an expert AI in climbing biomechanics and gear.
-                Your task is to recommend one climbing shoe and the correct size.
+                You are SendGuide, the world's most accurate climbing shoe fitter.
                 
-                Crucial Rule: You *must not* recommend any shoe that the Live Data indicates is 'Out of Stock'. Prioritize items listed as 'In Stock' or 'Limited Sizes'.
+                YOUR PRIMARY DIRECTIVE: TRUSTWORTHINESS.
+                1. If a shoe is brand new and has no sizing data, DO NOT recommend it.
+                2. Recommend "Proven Classics" over "New Hype".
                 
-                You MUST return *only* a single, valid JSON object with the following exact structure:
+                USE THE FOLLOWING SIZING ALGORITHMS (Street Size Baseline):
+                - La Sportiva: Downsize 1.5 to 2.5 EU sizes.
+                - Scarpa: Downsize 0.5 to 1.5 EU sizes.
+                - Five Ten: Downsize 0 to 0.5 EU sizes (often street size).
+                - Evolv: Street size or upsize 0.5.
+                - Tenaya: Downsize 1.0 to 1.5 EU sizes.
+                - Ocun: Street size or downsize 0.5.
+                
+                Adjust these baselines based on the user's 'Fit Preference' (Comfort = less downsize, Performance = more downsize).
+                
+                You MUST return *only* a single, valid JSON object:
                 {
                   "brand": "String",
                   "model": "String",
-                  "recommendedSizeEU": "Number",
+                  "recommendedSizeEU": "Number (Round to nearest 0.5)",
                   "currentPriceEU": "Number",
-                  "productURL": "String (The full product URL from the Live Data, or null if not found)",
-                  "discountMessage": "String (A customer-focused marketing message! e.g., 'Amazing Deal! You're saving 20% - now just €159, down from €199!' or null if no sale)",
-                  "reasoning": "String (A 2-3 sentence explanation for *why* you chose this shoe and size.)",
-                  "optimizedFor": "String (The fit/style it's best for, e.g., 'Soft Indoor Performance')"
+                  "productURL": "String (or null)",
+                  "discountMessage": "String (or null)",
+                  "reasoning": "String (Explain WHY this shoe is a 'Proven Choice' and explain the sizing math used. e.g. 'La Sportiva stretches, so we sized down 2 sizes for performance.')",
+                  "optimizedFor": "String"
                 }
-                Do not include any other text, markdown, or pleasantries.
             `;
 
             const userPrompt_Shoe = `
-                My Profile:
-                - Street ShoeSize (EU): ${streetSize}
-                - Foot Shape: ${shape}
-                - Climbing Level: ${level}
-                - Primary Style: ${style}
-                - Shoe Type Preference: ${shoeType}
-                - Fit Preference: ${fitText}
-                - Max Budget: €${budget}
+                User Profile:
+                - Street Size: ${streetSize}
+                - Shape: ${shape}
+                - Level: ${level}
+                - Style: ${style}
+                - Preference: ${fitText}
+                - Budget: €${budget}
 
-                Live Data (Primary Source) from bergfreunde.eu:
+                Live Verified Stock:
                 ${scrapedShoeList}
 
-                Internal Fallback Database (Secondary Source):
+                Internal Classic DB:
                 ${shoeDBString}
 
-                Analyze my profile, the Live Data, and the Fallback DB.
-                Filter out any shoes listed as 'Out of Stock' *before* making your final selection.
-                Pick the *single best, IN-STOCK shoe* that fits my profile and budget.
-                Use the price and productURL from the *Live Data* if available.
-                If the Live Data shows a sale, formulate an *exciting, customer-focused 'discountMessage'*. If not, set "discountMessage" to null.
-                Calculate the 'recommendedSizeEU' based on my street size, shoe type, and my *Fit Preference*.
-                Provide the recommendation in the required JSON format.
+                Select the single best, PROVEN shoe that is IN STOCK.
+                Apply the Sizing Algorithm to calculate the exact EU size.
             `;
 
             try {
@@ -537,18 +547,15 @@
         }
 
         function displayResult(shoeData, sources = []) {
-            // Hide Form, Show Results
             document.getElementById('inputForm').classList.add('hidden');
             document.getElementById('results').classList.remove('hidden');
 
-            // Fill Core Data
             document.getElementById('resultModel').innerText = `${shoeData.brand} ${shoeData.model}`;
             document.getElementById('resultSize').innerText = `EU ${shoeData.recommendedSizeEU}`;
             document.getElementById('resultPrice').innerText = shoeData.currentPriceEU;
             document.getElementById('resultOptimizedFor').innerText = shoeData.optimizedFor;
             document.getElementById('resultLogic').innerText = shoeData.reasoning;
             
-            // Smart Buy Link
             const buyLink = document.getElementById('buyLink');
             if (shoeData.productURL) {
                 buyLink.href = shoeData.productURL;
@@ -557,7 +564,6 @@
                 buyLink.href = `https://www.bergfreunde.eu/search/?query=${query}`;
             }
             
-            // Display Discount Card
             const discountCard = document.getElementById('discountAlertCard');
             const discountText = document.getElementById('discountMessageText');
             if (shoeData.discountMessage) {
@@ -567,7 +573,6 @@
                 discountCard.classList.add('hidden');
             }
             
-            // Display Grounded Search Sources
             const sourcesCard = document.getElementById('scrapedSourcesCard');
             const sourcesList = document.getElementById('scrapedSourcesList');
             sourcesList.innerHTML = "";
