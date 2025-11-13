@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendGuide | AI Climbing Shoe Sizer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #111; color: #eee; }
+        .accent { color: #FCD34D; } /* Amber-300 */
+        .card { background-color: #1F2937; border: 1px solid #374151; }
+        .btn-primary { background-color: #FCD34D; color: #111; font-weight: bold; transition: all 0.2s; }
+        .btn-primary:hover { background-color: #F59E0B; transform: translateY(-1px); }
+        .btn-primary:disabled { background-color: #4B5563; color: #9CA3AF; cursor: not-allowed; }
+        
+        /* Custom Range Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #FCD34D; margin-top: -6px; cursor: pointer; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #4B5563; border-radius: 2px; }
+
+        /* Segmented Button */
+        .segment-btn {
+            border: 1px solid #4B5563;
+            background-color: #374151;
+            transition: all 0.2s;
+            height: 100%; /* Ensure buttons in a grid are same height */
+        }
+        .segment-btn:hover { background-color: #4B5563; }
+        .segment-btn.selected-shape {
+            background-color: #4B5563;
+            border-color: #FCD34D;
+            color: #FCD34D;
+            font-weight: 600;
+        }
+
+        /* Subtle Fade-in Animation */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+
+        /* Spinner */
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Discount Alert Animation */
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(252, 211, 77, 0.4); }
+            50% { box-shadow: 0 0 0 5px rgba(252, 211, 77, 0); }
+        }
+        .animate-pulse-border {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-md bg-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-800">
+        
+        <!-- HEADER -->
+        <div class="bg-gray-800 p-6 text-center border-b border-gray-700 relative">
+            <div class="absolute top-4 right-4 text-gray-500 text-xs">v6.4-fix</div>
+            <h1 class="text-3xl font-bold tracking-tighter"><i class="fa-solid fa-mountain text-yellow-400 mr-2"></i>SendGuide</h1>
+            <p class="text-gray-400 text-sm mt-1">Live AI Shoe Sizing</p>
+        </div>
+
+        <!-- INPUT FORM -->
+        <div id="inputForm" class="p-6 space-y-6">
+            
+            <!-- Street Size -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Street Shoe Size (EU)</label>
+                <div class="flex items-center space-x-4">
+                    <button onclick="adjustSize(-0.5)" class="w-10 h-10 rounded bg-gray-700 hover:bg-gray-600 text-white font-bold">-</button>
+                    <input type="number" id="streetSize" value="42.0" step="0.5" class="w-full text-center bg-gray-800 border border-gray-700 rounded p-2 text-xl font-bold focus:outline-none focus:border-yellow-400 text-white">
+                    <button onclick="adjustSize(0.5)" class="w-10 h-10 rounded bg-gray-700 hover:bg-gray-600 text-white font-bold">+</button>
+                </div>
+            </div>
+
+            <!-- Foot Shape -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Foot Shape</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="selectButton('shape-btn', 'narrow', this)" class="shape-btn segment-btn p-3 rounded text-xs text-center selected-shape">
+                        <i class="fa-solid fa-ruler-vertical block mb-1 text-lg"></i>Narrow
+                    </button>
+                    <button onclick="selectButton('shape-btn', 'regular', this)" class="shape-btn segment-btn p-3 rounded text-xs text-center">
+                        <i class="fa-solid fa-shoe-prints block mb-1 text-lg"></i>Regular
+                    </button>
+                    <button onclick="selectButton('shape-btn', 'wide', this)" class="shape-btn segment-btn p-3 rounded text-xs text-center">
+                        <i class="fa-solid fa-expand block mb-1 text-lg"></i>Wide
+                    </button>
+                </div>
+                <input type="hidden" id="footShape" value="narrow">
+            </div>
+            
+            <!-- Climbing Style -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Primary Climbing Style</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="selectButton('style-btn', 'indoor', this)" class="style-btn segment-btn p-3 rounded text-xs text-center selected-shape">
+                        <i class="fa-solid fa-person-shelter block mb-1 text-lg"></i>Indoor Bouldering
+                    </button>
+                    <button onclick="selectButton('style-btn', 'sport', this)" class="style-btn segment-btn p-3 rounded text-xs text-center">
+                        <i class="fa-solid fa-mountain-sun block mb-1 text-lg"></i>Outdoor Sport
+                    </button>
+                    <button onclick="selectButton('style-btn', 'trad', this)" class="style-btn segment-btn p-3 rounded text-xs text-center">
+                        <i class="fa-solid fa-hand-rock block mb-1 text-lg"></i>Trad / All-Day
+                    </button>
+                </div>
+                <input type="hidden" id="climbingStyle" value="indoor">
+            </div>
+
+            <!-- Shoe Type Preference (with helper text) -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Shoe Type Preference</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="selectButton('type-btn', 'soft', this)" class="type-btn segment-btn p-3 rounded text-xs text-center selected-shape">
+                        <i class="fa-solid fa-feather block mb-1 text-lg"></i>
+                        <span class="font-bold">Soft / Comp</span>
+                        <span class="block text-gray-400 text-[10px] mt-1">(Sensitivity, Volumes, Smears)</span>
+                    </button>
+                    <button onclick="selectButton('type-btn', 'all-around', this)" class="type-btn segment-btn p-3 rounded text-xs text-center">
+                        <i class="fa-solid fa-balance-scale block mb-1 text-lg"></i>
+                        <span class="font-bold">All-Around</span>
+                        <span class="block text-gray-400 text-[10px] mt-1">(Balanced, Versatile)</span>
+                    </button>
+                    <button onclick="selectButton('type-btn', 'stiff', this)" class="type-btn segment-btn p-3 rounded text-xs text-center">
+                        <i class="fa-solid fa-gavel block mb-1 text-lg"></i>
+                        <span class="font-bold">Stiff / Edging</span>
+                        <span class="block text-gray-400 text-[10px] mt-1">(Small Edges, Support)</span>
+                    </button>
+                </div>
+                <input type="hidden" id="shoeType" value="soft">
+            </div>
+
+            <!-- Level -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Climbing Level</label>
+                <select id="level" class="w-full bg-gray-800 border border-gray-700 text-white rounded p-3 focus:outline-none focus:border-yellow-400">
+                    <option value="beginner">Beginner (V0 - V3)</option>
+                    <option value="intermediate" selected>Intermediate (V4 - V7)</option>
+                    <option value="advanced">Advanced (V8+)</option>
+                </select>
+            </div>
+            
+            <!-- Budget -->
+            <div>
+                <div class="flex justify-between text-sm text-gray-300 mb-2">
+                    <label class="font-medium">Max Budget</label>
+                    <span class="font-bold text-yellow-400">€<span id="budgetLabel">180</span></span>
+                </div>
+                <input type="range" id="budget" min="80" max="250" value="180" class="w-full" oninput="document.getElementById('budgetLabel').innerText = this.value">
+            </div>
+            
+            <!-- RE-ADDED: Fit Preference -->
+            <div>
+                <!-- FIX: Corrected the closing </label> tag -->
+                <div class="flex justify-between text-sm text-gray-300 mb-2">
+                    <label class="font-medium">Fit Preference</label>
+                    <span class="font-bold text-yellow-400"><span id="fitLabel">Performance</span></span>
+                </div>
+                <input type="range" id="fitPref" min="0" max="100" value="70" class="w-full" oninput="updateFitLabel(this.value)">
+            </div>
+
+
+            <button onclick="calculateFit()" id="calculateButton" class="w-full btn-primary py-4 rounded-lg text-lg shadow-lg flex items-center justify-center space-x-2">
+                <span id="calculateButtonText">Find My Perfect Fit</span>
+                <i id="calculateButtonIcon" class="fa-solid fa-bolt"></i>
+            </button>
+
+            <!-- Error Message Area -->
+            <p id="errorMessage" class="text-red-400 text-sm text-center hidden"></p>
+
+        </div>
+
+        <!-- RESULTS CONTAINER (Hidden by default) -->
+        <div id="results" class="hidden bg-gray-900 p-6">
+            
+            <div class="text-center mb-6 animate-fade-in" style="animation-delay: 0ms;">
+                <div class="inline-block p-2 px-4 bg-green-900 text-green-300 rounded-full text-xs font-bold mb-2">
+                    <i class="fa-solid fa-check-circle mr-1"></i> AI Match Found
+                </div>
+                <h2 class="text-2xl font-bold text-white" id="resultModel">Loading...</h2>
+                <p class="text-yellow-400 text-3xl font-bold mt-2" id="resultSize">EU 00.0</p>
+                <p class="text-gray-400 text-sm mt-1">Optimized for <span id="resultOptimizedFor">Performance</span></p>
+            </div>
+
+            <!-- Discount Alert Card -->
+            <div id="discountAlertCard" class="hidden bg-yellow-900 bg-opacity-30 border border-yellow-400 rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in animate-pulse-border" style="animation-delay: 100ms;">
+                <div class="absolute top-0 left-0 w-1 h-full bg-yellow-300"></div>
+                <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-tags mr-2 text-yellow-300"></i>Discount Alert!</h3>
+                <p class="text-yellow-100 text-sm leading-relaxed" id="discountMessageText">
+                    Loading discount info...
+                </p>
+            </div>
+
+            <!-- Analysis Card -->
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 200ms;">
+                <div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>
+                <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-brain mr-2 text-yellow-400"></i>AI Sizing Rationale</h3>
+                <p class="text-gray-300 text-sm leading-relaxed" id="resultLogic">
+                    Loading analysis...
+                </p>
+            </div>
+            
+            <!-- Live Data Sources -->
+            <div id="scrapedSourcesCard" class="hidden bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 300ms;">
+                <div class="absolute top-0 left-0 w-1 h-full bg-cyan-400"></div>
+                <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-globe mr-2 text-cyan-400"></i>Live Data Sources</h3>
+                <p class="text-gray-400 text-xs mb-3">AI analysis was grounded on real-time data from:</p>
+                <div id="scrapedSourcesList" class="space-y-2">
+                    <!-- Links will be injected here -->
+                </div>
+            </div>
+
+            <!-- AI Training Tip Card -->
+            <div id="geminiTipCard" class="hidden bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6 relative overflow-hidden animate-fade-in">
+                <div class="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
+                <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-lightbulb mr-2 text-blue-400"></i>AI Training Tip</h3>
+                <p class="text-gray-300 text-sm leading-relaxed" id="geminiTipText">
+                    Loading tip...
+                </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="space-y-3 animate-fade-in" style="animation-delay: 400ms;">
+                <a href="#" id="buyLink" target="_blank" class="block w-full bg-white text-black font-bold text-center py-3 rounded hover:bg-gray-200 transition">
+                    Find on Bergfreunde.eu (~€<span id="resultPrice">000</span>) <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i>
+                </a>
+                <button onclick="getTrainingTip()" id="tipButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition flex items-center justify-center space-x-2">
+                    <span id="tipButtonText">✨ Get a Training Tip</span>
+                    <i id="tipButtonIcon" class="fa-solid fa-lightbulb"></i>
+                </button>
+                <button onclick="resetApp()" class="block w-full text-gray-500 text-sm hover:text-white transition">
+                    Start Over
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC (THE BRAIN) -->
+    <script>
+        // --- 1. THE (ENLARGED) Context DATABASE ---
+        const SHOE_DB = [
+             { id: "solution", brand: "La Sportiva", model: "Solution", type: "aggressive", style: ["indoor", "sport"], volume: "low", shapes: ["narrow", "regular"], downsize_baseline: 2.0, price: 179 },
+            { id: "solution_comp", brand: "La Sportiva", model: "Solution Comp", type: "aggressive", style: ["indoor"], volume: "low", shapes: ["narrow", "regular"], downsize_baseline: 2.5, price: 189 },
+            { id: "drago", brand: "Scarpa", model: "Drago", type: "aggressive", style: ["indoor"], volume: "medium", shapes: ["wide", "regular"], downsize_baseline: 1.0, price: 169 },
+            { id: "instinct_vsr", brand: "Scarpa", model: "Instinct VSR", type: "aggressive", style: ["indoor", "sport"], volume: "medium", shapes: ["narrow", "regular"], downsize_baseline: 1.5, price: 175 },
+            { id: "tarantula", brand: "La Sportiva", model: "Tarantulace", type: "neutral", style: ["trad", "sport"], volume: "high", shapes: ["regular", "wide", "narrow"], downsize_baseline: 1.0, price: 89 },
+            { id: "hiangle", brand: "Five Ten", model: "Hiangle", type: "moderate", style: ["indoor", "sport"], volume: "medium", shapes: ["regular", "wide"], downsize_baseline: 0.5, price: 150 },
+            { id: "skwama", brand: "La Sportiva", model: "Skwama", type: "aggressive", style: ["indoor", "sport"], volume: "high", shapes: ["wide", "regular"], downsize_baseline: 2.0, price: 179 },
+            { id: "miura_vs", brand: "La Sportiva", model: "Miura VS", type: "aggressive", style: ["sport", "trad"], volume: "medium", shapes: ["narrow", "regular"], downsize_baseline: 1.5, price: 185 },
+            { id: "tc_pro", brand: "La Sportiva", model: "TC Pro", type: "neutral", style: ["trad"], volume: "medium", shapes: ["narrow", "regular"], downsize_baseline: 1.0, price: 199 },
+            { id: "vapor_v", brand: "Scarpa", model: "Vapor V", type: "moderate", style: ["sport", "trad"], volume: "medium", shapes: ["regular"], downsize_baseline: 1.0, price: 165 },
+        ];
+
+        // --- 2. UI HELPERS ---
+        function adjustSize(amount) {
+            const input = document.getElementById('streetSize');
+            let val = parseFloat(input.value) + amount;
+            input.value = val.toFixed(1);
+        }
+
+        function selectButton(className, value, btn) {
+            let inputId = '';
+            if (className === 'shape-btn') inputId = 'footShape';
+            else if (className === 'style-btn') inputId = 'climbingStyle';
+            else if (className === 'type-btn') inputId = 'shoeType';
+            
+            if (inputId) {
+                document.getElementById(inputId).value = value;
+                document.querySelectorAll(`.${className}`).forEach(b => b.classList.remove('selected-shape'));
+                btn.classList.add('selected-shape');
+            }
+        }
+        
+        // RE-ADDED: Update fit label
+        function updateFitLabel(value) {
+            const label = document.getElementById('fitLabel');
+            if (value < 30) label.innerText = "Comfort";
+            else if (value < 70) label.innerText = "Balanced";
+            else label.innerText = "Performance";
+        }
+        
+        window.onload = () => {
+            document.getElementById('budgetLabel').innerText = document.getElementById('budget').value;
+            updateFitLabel(document.getElementById('fitPref').value); // Initialize fit label
+        };
+
+        function showLoading(isLoading, message = "Find My Perfect Fit") {
+            const btn = document.getElementById('calculateButton');
+            const text = document.getElementById('calculateButtonText');
+            const icon = document.getElementById('calculateButtonIcon');
+            const errorMsg = document.getElementById('errorMessage');
+            btn.disabled = isLoading;
+            errorMsg.classList.add('hidden');
+            text.innerText = message;
+            icon.className = isLoading ? "spinner" : "fa-solid fa-bolt";
+        }
+
+        function showTipLoading(isLoading) {
+            const btn = document.getElementById('tipButton');
+            const text = document.getElementById('tipButtonText');
+            const icon = document.getElementById('tipButtonIcon');
+            const card = document.getElementById('geminiTipCard');
+            const cardText = document.getElementById('geminiTipText');
+            btn.disabled = isLoading;
+            if (isLoading) {
+                card.classList.remove('hidden');
+                cardText.innerText = "Generating tip...";
+                text.innerText = "Generating...";
+                icon.className = "spinner";
+            } else {
+                text.innerText = "✨ Get a Training Tip";
+                icon.className = "fa-solid fa-lightbulb";
+            }
+        }
+
+        function resetApp() {
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('geminiTipCard').classList.add('hidden');
+            document.getElementById('scrapedSourcesCard').classList.add('hidden');
+            document.getElementById('discountAlertCard').classList.add('hidden');
+            document.getElementById('inputForm').classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+            showLoading(false);
+            showTipLoading(false);
+        }
+
+        // --- 3. GEMINI API CALLER ---
+        async function callGemini(systemPrompt, userQuery, isJson = false, useGrounding = false, maxRetries = 3) {
+            const apiKey = ""; // API key is handled by the environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ parts: [{ text: userQuery }] }],
+            };
+            if (isJson) payload.generationConfig = { responseMimeType: "application/json" };
+            if (useGrounding) payload.tools = [{ "google_search": {} }];
+
+            let attempt = 0;
+            while (attempt < maxRetries) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                    
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        const text = candidate.content.parts[0].text;
+                        let sources = [];
+                        const groundingMetadata = candidate.groundingMetadata;
+                        if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                            sources = groundingMetadata.groundingAttributions
+                                .map(attribution => ({
+                                    uri: attribution.web?.uri,
+                                    title: attribution.web?.title,
+                                }))
+                                .filter(source => source.uri && source.title);
+                        }
+                        return { text, sources };
+                    } else {
+                        throw new Error("Invalid response structure from API.");
+                    }
+                } catch (error) {
+                    console.error(`Attempt ${attempt + 1} failed:`, error);
+                    attempt++;
+                    if (attempt >= maxRetries) throw error;
+                    const delay = Math.pow(2, attempt - 1) * 1000 + Math.random() * 500;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error("All API retries failed.");
+        }
+
+        // --- 4. THE CORE LOGIC ---
+
+        async function calculateFit() {
+            showLoading(true, "Checking bergfreunde.eu stock...");
+
+            // Get All Inputs
+            const streetSize = parseFloat(document.getElementById('streetSize').value);
+            const shape = document.getElementById('footShape').value;
+            const style = document.getElementById('climbingStyle').value;
+            const level = document.getElementById('level').value;
+            const budget = parseInt(document.getElementById('budget').value);
+            const shoeType = document.getElementById('shoeType').value;
+            const pref = parseInt(document.getElementById('fitPref').value);
+            let fitText = (pref < 30) ? "Comfort Fit" : (pref < 70) ? "Balanced Fit" : "Aggressive Performance Fit";
+
+            // --- ✨ STEP 1: Grounded Search Call (With Stock Check) ---
+            const systemPrompt_Search = `
+                You are a gear expert. Your goal is to find 3-5 top-rated shoes *specifically from bergfreunde.eu* based on the user's criteria.
+                For each shoe, you *must* find:
+                1. Brand
+                2. Model
+                3. Current price in Euros (€)
+                4. Any discount/sale info
+                5. The *direct product URL* from bergfreunde.eu (if available, otherwise null)
+                6. Stock Status (e.g., 'In Stock', 'Out of Stock', 'Limited Sizes')
+                
+                Do not add any conversational text, just the list.
+            `;
+            const userPrompt_Search = `
+                Find 3-5 top-rated climbing shoes for 2025 *on bergfreunde.eu* (site:bergfreunde.eu).
+                - Climber Level: ${level}
+                - Foot Shape: ${shape}
+                - Primary Style: ${style}
+                - Shoe Type: ${shoeType}
+                - Max Budget: €${budget}
+            `;
+            
+            let scrapedShoeList = "";
+            let scrapedSources = [];
+            
+            try {
+                const searchResult = await callGemini(systemPrompt_Search, userPrompt_Search, false, true);
+                scrapedShoeList = searchResult.text;
+                scrapedSources = searchResult.sources;
+            } catch (error) {
+                console.warn("Live search failed, proceeding with internal database only.", error);
+                scrapedShoeList = "Live search failed. Using internal database.";
+            }
+
+            // --- ✨ STEP 2: AI Recommendation Call (With Stock Filter) ---
+            showLoading(true, "Analyzing profile...");
+            const shoeDBString = JSON.stringify(SHOE_DB, null, 2);
+
+            const systemPrompt_Shoe = `
+                You are SendGuide, an expert AI in climbing biomechanics and gear.
+                Your task is to recommend one climbing shoe and the correct size.
+                
+                Crucial Rule: You *must not* recommend any shoe that the Live Data indicates is 'Out of Stock'. Prioritize items listed as 'In Stock' or 'Limited Sizes'.
+                
+                You MUST return *only* a single, valid JSON object with the following exact structure:
+                {
+                  "brand": "String",
+                  "model": "String",
+                  "recommendedSizeEU": "Number",
+                  "currentPriceEU": "Number",
+                  "productURL": "String (The full product URL from the Live Data, or null if not found)",
+                  "discountMessage": "String (A customer-focused marketing message! e.g., 'Amazing Deal! You're saving 20% - now just €159, down from €199!' or null if no sale)",
+                  "reasoning": "String (A 2-3 sentence explanation for *why* you chose this shoe and size.)",
+                  "optimizedFor": "String (The fit/style it's best for, e.g., 'Soft Indoor Performance')"
+                }
+                Do not include any other text, markdown, or pleasantries.
+            `;
+
+            const userPrompt_Shoe = `
+                My Profile:
+                - Street ShoeSize (EU): ${streetSize}
+                - Foot Shape: ${shape}
+                - Climbing Level: ${level}
+                - Primary Style: ${style}
+                - Shoe Type Preference: ${shoeType}
+                - Fit Preference: ${fitText}
+                - Max Budget: €${budget}
+
+                Live Data (Primary Source) from bergfreunde.eu:
+                ${scrapedShoeList}
+
+                Internal Fallback Database (Secondary Source):
+                ${shoeDBString}
+
+                Analyze my profile, the Live Data, and the Fallback DB.
+                Filter out any shoes listed as 'Out of Stock' *before* making your final selection.
+                Pick the *single best, IN-STOCK shoe* that fits my profile and budget.
+                Use the price and productURL from the *Live Data* if available.
+                If the Live Data shows a sale, formulate an *exciting, customer-focused 'discountMessage'*. If not, set "discountMessage" to null.
+                Calculate the 'recommendedSizeEU' based on my street size, shoe type, and my *Fit Preference*.
+                Provide the recommendation in the required JSON format.
+            `;
+
+            try {
+                const jsonResponse = await callGemini(systemPrompt_Shoe, userPrompt_Shoe, true, false);
+                const shoeData = JSON.parse(jsonResponse.text);
+                displayResult(shoeData, scrapedSources);
+            } catch (error) {
+                console.error("Failed to get shoe recommendation:", error);
+                document.getElementById('errorMessage').innerText = "AI failed to find an in-stock match. Please try adjusting your filters.";
+                document.getElementById('errorMessage').classList.remove('hidden');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        /**
+         * ✨ GEMINI FEATURE: TRAINING TIP
+         */
+        async function getTrainingTip() {
+            showTipLoading(true);
+            const level = document.getElementById('level').options[document.getElementById('level').selectedIndex].text;
+            const shoeModel = document.getElementById('resultModel').innerText;
+            const style = document.getElementById('climbingStyle').value;
+            const shoeType = document.getElementById('shoeType').value;
+
+            const systemPrompt_Tip = `
+                You are a world-class climbing coach.
+                You provide concise, actionable, and encouraging training tips (2-3 sentences).
+                Return *only* the tip as a single paragraph. No intro.
+            `;
+            const userPrompt_Tip = `
+                My level is: ${level}
+                My new shoe is: ${shoeModel} (which is a ${shoeType} type)
+                My primary style is: ${style}
+                Give me one concise training tip based on this.
+            `;
+
+            try {
+                const tipResult = await callGemini(systemPrompt_Tip, userPrompt_Tip);
+                document.getElementById('geminiTipText').innerText = tipResult.text;
+            } catch (error) {
+                console.error("Failed to get training tip:", error);
+                document.getElementById('geminiTipText').innerText = "Could not load tip at this time. Please try again.";
+            } finally {
+                showTipLoading(false);
+            }
+        }
+
+        function displayResult(shoeData, sources = []) {
+            // Hide Form, Show Results
+            document.getElementById('inputForm').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+
+            // Fill Core Data
+            document.getElementById('resultModel').innerText = `${shoeData.brand} ${shoeData.model}`;
+            document.getElementById('resultSize').innerText = `EU ${shoeData.recommendedSizeEU}`;
+            document.getElementById('resultPrice').innerText = shoeData.currentPriceEU;
+            document.getElementById('resultOptimizedFor').innerText = shoeData.optimizedFor;
+            document.getElementById('resultLogic').innerText = shoeData.reasoning;
+            
+            // Smart Buy Link
+            const buyLink = document.getElementById('buyLink');
+            if (shoeData.productURL) {
+                buyLink.href = shoeData.productURL;
+            } else {
+                const query = encodeURIComponent(`${shoeData.brand} ${shoeData.model} climbing shoe`);
+                buyLink.href = `https://www.bergfreunde.eu/search/?query=${query}`;
+            }
+            
+            // Display Discount Card
+            const discountCard = document.getElementById('discountAlertCard');
+            const discountText = document.getElementById('discountMessageText');
+            if (shoeData.discountMessage) {
+                discountText.innerText = shoeData.discountMessage;
+                discountCard.classList.remove('hidden');
+            } else {
+                discountCard.classList.add('hidden');
+            }
+            
+            // Display Grounded Search Sources
+            const sourcesCard = document.getElementById('scrapedSourcesCard');
+            const sourcesList = document.getElementById('scrapedSourcesList');
+            sourcesList.innerHTML = "";
+            if (sources.length > 0) {
+                sources.slice(0, 3).forEach(source => {
+                    const sourceElement = document.createElement('a');
+                    sourceElement.href = source.uri;
+                    sourceElement.target = "_blank";
+                    sourceElement.className = "block truncate text-sm text-cyan-400 hover:underline";
+                    sourceElement.innerText = source.title;
+                    sourcesList.appendChild(sourceElement);
+                });
+                sourcesCard.classList.remove('hidden');
+            } else {
+                sourcesCard.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
