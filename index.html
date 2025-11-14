@@ -71,7 +71,7 @@
         
         <!-- HEADER -->
         <div class="bg-gray-800 p-6 text-center border-b border-gray-700 relative">
-            <div class="absolute top-4 right-4 text-gray-500 text-xs">v8.3-CLEANED</div>
+            <div class="absolute top-4 right-4 text-gray-500 text-xs">v8.4-CLEAN</div>
             <h1 class="text-3xl font-bold tracking-tighter"><i class="fa-solid fa-mountain text-yellow-400 mr-2"></i>SendGuide</h1>
             <p class="text-gray-400 text-sm mt-1">Expert AI Sizing & Reviews</p>
         </div>
@@ -297,7 +297,7 @@
         function selectButton(className, value, btn) {
             let inputId = '';
             if (className === 'shape-btn') inputId = 'footShape';
-            else if (className ==='style-btn') inputId = 'climbingStyle';
+            else if (className === 'style-btn') inputId = 'climbingStyle';
             else if (className === 'type-btn') inputId = 'shoeType';
             
             if (inputId) {
@@ -378,7 +378,8 @@
         async function callGemini(systemPrompt, userQuery, isJson = false, useGrounding = false, maxRetries = 3) {
             
             // CHECK FOR KEY
-            if (!YOUR_GOOGLE_API_KEY || YOUR_GOOGLE_API_KEY === "PASTE_YOUR_KEY_HERE" || YOUR_GOOGLE_API_KEY.length < 10) {
+            // *** THIS IS THE CLEANED-UP CHECK. IT IS NOW ROBUST. ***
+            if (!YOUR_GOOGLE_API_KEY || YOUR_GOOGLE_API_KEY.length < 30 || YOUR_GOOGLE_API_KEY.includes("PASTE")) {
                 throw new Error("MISSING_API_KEY");
             }
 
@@ -407,7 +408,7 @@
                         let sources = [];
                         const groundingMetadata = candidate.groundingMetadata;
                         if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                            sources = groundingMetadata.groundingAttactions
+                            sources = groundingMetadata.groundingAttributions
                                 .map(attribution => ({
                                     uri: attribution.web?.uri,
                                     title: attribution.web?.title,
@@ -487,7 +488,7 @@
                     console.error("Failed to start search: MISSING_API_KEY", error);
                     const errorBox = document.getElementById('errorMessage');
                     // *** THIS IS THE CLEANED-UP ERROR MESSAGE ***
-                    errorBox.innerHTML = "<b>Setup Error:</b> Your Google API Key is missing.<br>1. Open the .html file.<br>2. Find the 'YOUR_GOOGLE_API_KEY' line.<br>3. Paste your key.";
+                    errorBox.innerHTML = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please add your key to the .html file.";
                     errorBox.classList.remove('hidden');
                     showLoading(false, "Find My Perfect Fit"); // Stop the spinner
                     return; // Stop execution
@@ -495,7 +496,7 @@
                 
                 // Fail gracefully if grounding fails for other reasons
                 console.warn("Live search failed, proceeding with internal database only.", error);
-                scrapedShoeList = "Live search failed. Using internal database.";
+                scrapedShodList = "Live search failed. Using internal database.";
             }
 
             // --- ✨ STEP 2: Expert Analysis with SIZING ALGORITHM ---
