@@ -71,7 +71,7 @@
         
         <!-- HEADER -->
         <div class="bg-gray-800 p-6 text-center border-b border-gray-700 relative">
-            <div class="absolute top-4 right-4 text-gray-500 text-xs">v8.0-LIVE</div>
+            <div class="absolute top-4 right-4 text-gray-500 text-xs">v8.3-CLEANED</div>
             <h1 class="text-3xl font-bold tracking-tighter"><i class="fa-solid fa-mountain text-yellow-400 mr-2"></i>SendGuide</h1>
             <p class="text-gray-400 text-sm mt-1">Expert AI Sizing & Reviews</p>
         </div>
@@ -266,7 +266,7 @@
              { id: "solution", brand: "La Sportiva", model: "Solution", type: "aggressive", style: ["indoor", "sport"], volume: "low", shapes: ["narrow", "regular"], downsize_baseline: 2.0, price: 179 },
             { id: "solution_comp", brand: "La Sportiva", model: "Solution Comp", type: "aggressive", style: ["indoor"], volume: "low", shapes: ["narrow", "regular"], downsize_baseline: 2.5, price: 189 },
             { id: "drago", brand: "Scarpa", model: "Drago", type: "aggressive", style: ["indoor"], volume: "medium", shapes: ["wide", "regular"], downsize_baseline: 1.0, price: 169 },
-            { id: "instinct_vsr", brand: "Scarpa", model: "Instinct VSR", type: "aggressive", style: ["indoor", "sport"], volume: "medium", shapes: ["narrow", "regular"], downsize_baseline: 1.5, price: 175 },
+            { id: "instinct_vsr", brand: "Scarpa", model: "Instinct VSR", type: "aggressive", style: ["indoor", "sport"], volume: "medium", shapes: ["narrow","regular"], downsize_baseline: 1.5, price: 175 },
             { id: "tarantula", brand: "La Sportiva", model: "Tarantulace", type: "neutral", style: ["trad", "sport"], volume: "high", shapes: ["regular", "wide", "narrow"], downsize_baseline: 1.0, price: 89 },
             { id: "hiangle", brand: "Five Ten", model: "Hiangle", type: "moderate", style: ["indoor", "sport"], volume: "medium", shapes: ["regular", "wide"], downsize_baseline: 0.5, price: 150 },
             { id: "skwama", brand: "La Sportiva", model: "Skwama", type: "aggressive", style: ["indoor", "sport"], volume: "high", shapes: ["wide", "regular"], downsize_baseline: 2.0, price: 179 },
@@ -274,6 +274,18 @@
             { id: "tc_pro", brand: "La Sportiva", model: "TC Pro", type: "neutral", style: ["trad"], volume: "medium", shapes: ["narrow", "regular"], downsize_baseline: 1.0, price: 199 },
             { id: "vapor_v", brand: "Scarpa", model: "Vapor V", type: "moderate", style: ["sport", "trad"], volume: "medium", shapes: ["regular"], downsize_baseline: 1.0, price: 165 },
         ];
+        
+        // --- ✨ NEW DYNAMIC LOADING MESSAGES ---
+        const LOADING_MESSAGES = [
+            "Tailoring the perfect shoe...",
+            "Accessing community database...",
+            "Analyzing fit and preferences...",
+            "Verifying in-stock models...",
+            "Calculating sizing algorithm...",
+            "Finding proven classics..."
+        ];
+        let loadingInterval; // This will hold the timer
+        // -------------------------------------
 
         // --- 2. UI HELPERS ---
         function adjustSize(amount) {
@@ -285,7 +297,7 @@
         function selectButton(className, value, btn) {
             let inputId = '';
             if (className === 'shape-btn') inputId = 'footShape';
-            else if (className === 'style-btn') inputId = 'climbingStyle';
+            else if (className ==='style-btn') inputId = 'climbingStyle';
             else if (className === 'type-btn') inputId = 'shoeType';
             
             if (inputId) {
@@ -312,10 +324,25 @@
             const text = document.getElementById('calculateButtonText');
             const icon = document.getElementById('calculateButtonIcon');
             const errorMsg = document.getElementById('errorMessage');
+            
             btn.disabled = isLoading;
             errorMsg.classList.add('hidden');
-            text.innerText = message;
-            icon.className = isLoading ? "spinner" : "fa-solid fa-bolt";
+            
+            if (isLoading) {
+                // Start dynamic loading messages
+                icon.className = "spinner";
+                let msgIndex = 0;
+                text.innerText = LOADING_MESSAGES[msgIndex];
+                loadingInterval = setInterval(() => {
+                    msgIndex = (msgIndex + 1) % LOADING_MESSAGES.length;
+                    text.innerText = LOADING_MESSAGES[msgIndex];
+                }, 2000); // Change message every 2 seconds
+            } else {
+                // Stop dynamic loading messages
+                clearInterval(loadingInterval);
+                text.innerText = message;
+                icon.className = "fa-solid fa-bolt";
+            }
         }
 
         function showTipLoading(isLoading) {
@@ -351,7 +378,7 @@
         async function callGemini(systemPrompt, userQuery, isJson = false, useGrounding = false, maxRetries = 3) {
             
             // CHECK FOR KEY
-            if (!YOUR_GOOGLE_API_KEY || YOUR_GOOGLE_API_KEY === "AIzaSyAN8r2v0xOOpAXQjm9kOY_Tk-BYuBrs7Xs" || YOUR_GOOGLE_API_KEY.length < 10) {
+            if (!YOUR_GOOGLE_API_KEY || YOUR_GOOGLE_API_KEY === "PASTE_YOUR_KEY_HERE" || YOUR_GOOGLE_API_KEY.length < 10) {
                 throw new Error("MISSING_API_KEY");
             }
 
@@ -380,7 +407,7 @@
                         let sources = [];
                         const groundingMetadata = candidate.groundingMetadata;
                         if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                            sources = groundingMetadata.groundingAttributions
+                            sources = groundingMetadata.groundingAttactions
                                 .map(attribution => ({
                                     uri: attribution.web?.uri,
                                     title: attribution.web?.title,
@@ -405,7 +432,7 @@
         // --- 4. THE CORE LOGIC ---
 
         async function calculateFit() {
-            showLoading(true, "Searching for proven shoes & reviews...");
+            showLoading(true); // <-- This now starts the dynamic messages
 
             // Get All Inputs
             const streetSize = parseFloat(document.getElementById('streetSize').value);
@@ -459,19 +486,19 @@
                     // This is the main error handler for missing key
                     console.error("Failed to start search: MISSING_API_KEY", error);
                     const errorBox = document.getElementById('errorMessage');
-                    errorBox.innerHTML = "<b>Setup Error:</b> You need to add your Google API Key to the code.<br>1. Open the HTML file.<br>2. Find 'PASTE_YOUR_KEY_HERE'.<br>3. Paste your key.";
+                    // *** THIS IS THE CLEANED-UP ERROR MESSAGE ***
+                    errorBox.innerHTML = "<b>Setup Error:</b> Your Google API Key is missing.<br>1. Open the .html file.<br>2. Find the 'YOUR_GOOGLE_API_KEY' line.<br>3. Paste your key.";
                     errorBox.classList.remove('hidden');
-                    showLoading(false); // Stop the spinner
+                    showLoading(false, "Find My Perfect Fit"); // Stop the spinner
                     return; // Stop execution
                 }
                 
                 // Fail gracefully if grounding fails for other reasons
                 console.warn("Live search failed, proceeding with internal database only.", error);
-                scrapedShoEList = "Live search failed. Using internal database.";
+                scrapedShoeList = "Live search failed. Using internal database.";
             }
 
             // --- ✨ STEP 2: Expert Analysis with SIZING ALGORITHM ---
-            showLoading(true, "Calculating perfect fit...");
             const shoeDBString = JSON.stringify(SHOE_DB, null, 2);
 
             const systemPrompt_Shoe = `
@@ -514,7 +541,7 @@
                 - Budget: €${budget}
 
                 Live Verified Stock:
-                ${scrapedShoEList}
+                ${scrapedShoeList}
 
                 Internal Classic DB:
                 ${shoeDBString}
@@ -532,11 +559,11 @@
                 const errorBox = document.getElementById('errorMessage');
                 errorBox.classList.remove('hidden');
                 
-                // Since the first block now catches MISSING_API_KEY, this block only needs to handle other errors.
+                // This is the FIXED block. The MISSING_API_KEY check is removed.
                 errorBox.innerText = "Connection failed. Please check your internet or API Limit.";
 
             } finally {
-                showLoading(false);
+                showLoading(false, "Find My Perfect Fit");
             }
         }
 
@@ -624,3 +651,5 @@
     </script>
 </body>
 </html>
+
+
