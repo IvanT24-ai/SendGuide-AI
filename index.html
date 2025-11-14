@@ -71,7 +71,7 @@
         
         <!-- HEADER -->
         <div class="bg-gray-800 p-6 text-center border-b border-gray-700 relative">
-            <div class="absolute top-4 right-4 text-gray-500 text-xs">v7.0-PRO</div>
+            <div class="absolute top-4 right-4 text-gray-500 text-xs">v8.0-LIVE</div>
             <h1 class="text-3xl font-bold tracking-tighter"><i class="fa-solid fa-mountain text-yellow-400 mr-2"></i>SendGuide</h1>
             <p class="text-gray-400 text-sm mt-1">Expert AI Sizing & Reviews</p>
         </div>
@@ -130,7 +130,7 @@
                     <button onclick="selectButton('type-btn', 'soft', this)" class="type-btn segment-btn p-3 rounded text-xs text-center selected-shape">
                         <i class="fa-solid fa-feather block mb-1 text-lg"></i>
                         <span class="font-bold">Soft / Comp</span>
-                        <span class="block text-gray-400 text-[10px] mt-1">(Sensitivity, Volumes, Smears)</span>
+                        <span class="block text-gray-400 text-[10px] mt-1">(Sensitivity, Volumes)</span>
                     </button>
                     <button onclick="selectButton('type-btn', 'all-around', this)" class="type-btn segment-btn p-3 rounded text-xs text-center">
                         <i class="fa-solid fa-balance-scale block mb-1 text-lg"></i>
@@ -181,12 +181,12 @@
             </button>
 
             <!-- Error Message Area -->
-            <p id="errorMessage" class="text-red-400 text-sm text-center hidden"></p>
+            <p id="errorMessage" class="text-red-400 text-sm text-center hidden mt-4 p-2 border border-red-500 rounded bg-red-900 bg-opacity-20"></p>
 
         </div>
 
         <!-- RESULTS CONTAINER (Hidden by default) -->
-        <div id="results" class="hidden bg-gray-900 p-6">
+        <div id="results" class="hidden bg-gray-900 p-6 w-full">
             
             <div class="text-center mb-6 animate-fade-in" style="animation-delay: 0ms;">
                 <div class="inline-block p-2 px-4 bg-green-900 text-green-300 rounded-full text-xs font-bold mb-2">
@@ -254,6 +254,13 @@
 
     <!-- JAVASCRIPT LOGIC (THE BRAIN) -->
     <script>
+        // ---------------------------------------------------------
+        // ⚠️ IMPORTANT: PASTE YOUR API KEY BELOW
+        // Get one here: https://aistudio.google.com/app/apikey
+        // ---------------------------------------------------------
+        const YOUR_GOOGLE_API_KEY = "PASTE_YOUR_KEY_HERE"; 
+        // ---------------------------------------------------------
+
         // --- 1. THE (ENLARGED) Context DATABASE ---
         const SHOE_DB = [
              { id: "solution", brand: "La Sportiva", model: "Solution", type: "aggressive", style: ["indoor", "sport"], volume: "low", shapes: ["narrow", "regular"], downsize_baseline: 2.0, price: 179 },
@@ -297,7 +304,7 @@
         
         window.onload = () => {
             document.getElementById('budgetLabel').innerText = document.getElementById('budget').value;
-            updateFitLabel(document.getElementById('fitPref').value); // Initialize fit label
+            updateFitLabel(document.getElementById('fitPref').value); 
         };
 
         function showLoading(isLoading, message = "Find My Perfect Fit") {
@@ -342,8 +349,13 @@
 
         // --- 3. GEMINI API CALLER ---
         async function callGemini(systemPrompt, userQuery, isJson = false, useGrounding = false, maxRetries = 3) {
-            const apiKey = ""; // API key is handled by the environment
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            // CHECK FOR KEY
+            if (!YOUR_GOOGLE_API_KEY || YOUR_GOOGLE_API_KEY === "AIzaSyAf2yT3UAGX_rfd_aJ0tOxmiGIuBwdmzTM" || YOUR_GOOGLE_API_KEY.length < 10) {
+                throw new Error("MISSING_API_KEY");
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${YOUR_GOOGLE_API_KEY}`;
             const payload = {
                 systemInstruction: { parts: [{ text: systemPrompt }] },
                 contents: [{ parts: [{ text: userQuery }] }],
@@ -443,8 +455,19 @@
                 scrapedShoeList = searchResult.text;
                 scrapedSources = searchResult.sources;
             } catch (error) {
+                if (error.message === "MISSING_API_KEY") {
+                    // This is the main error handler for missing key
+                    console.error("Failed to start search: MISSING_API_KEY", error);
+                    const errorBox = document.getElementById('errorMessage');
+                    errorBox.innerHTML = "<b>Setup Error:</b> You need to add your Google API Key to the code.<br>1. Open the HTML file.<br>2. Find 'PASTE_YOUR_KEY_HERE'.<br>3. Paste your key.";
+                    errorBox.classList.remove('hidden');
+                    showLoading(false); // Stop the spinner
+                    return; // Stop execution
+                }
+                
+                // Fail gracefully if grounding fails for other reasons
                 console.warn("Live search failed, proceeding with internal database only.", error);
-                scrapedShoeList = "Live search failed. Using internal database.";
+                scrapedShoEList = "Live search failed. Using internal database.";
             }
 
             // --- ✨ STEP 2: Expert Analysis with SIZING ALGORITHM ---
@@ -491,7 +514,7 @@
                 - Budget: €${budget}
 
                 Live Verified Stock:
-                ${scrapedShoeList}
+                ${scrapedShoEList}
 
                 Internal Classic DB:
                 ${shoeDBString}
@@ -506,8 +529,12 @@
                 displayResult(shoeData, scrapedSources);
             } catch (error) {
                 console.error("Failed to get shoe recommendation:", error);
-                document.getElementById('errorMessage').innerText = "AI failed to find an in-stock match. Please try adjusting your filters.";
-                document.getElementById('errorMessage').classList.remove('hidden');
+                const errorBox = document.getElementById('errorMessage');
+                errorBox.classList.remove('hidden');
+                
+                // Since the first block now catches MISSING_API_KEY, this block only needs to handle other errors.
+                errorBox.innerText = "Connection failed. Please check your internet or API Limit.";
+
             } finally {
                 showLoading(false);
             }
@@ -548,7 +575,11 @@
 
         function displayResult(shoeData, sources = []) {
             document.getElementById('inputForm').classList.add('hidden');
-            document.getElementById('results').classList.remove('hidden');
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.classList.remove('hidden');
+
+            // SCROLL TO TOP FIX FOR IFRAMES
+            window.scrollTo(0, 0);
 
             document.getElementById('resultModel').innerText = `${shoeData.brand} ${shoeData.model}`;
             document.getElementById('resultSize').innerText = `EU ${shoeData.recommendedSizeEU}`;
