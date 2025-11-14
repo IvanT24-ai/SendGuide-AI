@@ -92,7 +92,7 @@
         
         <!-- HEADER -->
         <div class="bg-gray-800 p-6 text-center border-b border-gray-700 relative">
-            <div class="absolute top-4 right-4 text-gray-500 text-xs">v8.7-AFFILIATE</div>
+            <div class="absolute top-4 right-4 text-gray-500 text-xs">v8.9-DEBUG</div>
             <h1 class="text-3xl font-bold tracking-tighter"><i class="fa-solid fa-mountain text-yellow-400 mr-2"></i>SendGuide</h1>
             <p class="text-gray-400 text-sm mt-1">Expert AI Sizing & Reviews</p>
         </div>
@@ -217,7 +217,7 @@
             </button>
 
             <!-- Error Message Area -->
-            <p id="errorMessage" class="text-red-400 text-sm text-center hidden mt-4 p-2 border border-red-500 rounded bg-red-900 bg-opacity-20"></p>
+            <p id="errorMessage" class="text-red-400 text-sm text-left hidden mt-4 p-3 border border-red-500 rounded bg-red-900 bg-opacity-20"></p>
 
         </div>
 
@@ -332,7 +332,7 @@
             "recommendedSizeEU": 40.5,
             "currentPriceEU": 179,
             "productURL": "https://www.bergfreunde.eu/",
-            "productImageURL": "https://placehold.co/600x400/1F2937/374151?text=Shoe+Image", // NEW
+            "productImageURL": "https://www.bergfreunde.eu/out/pictures/generated/product/1/300_300_75/135-0186-01_pic1_1.jpg", // NEW
             "discountMessage": "Amazing Deal! This shoe is currently on sale. (This is a demo alert)",
             "reasoning": "This is a *Demo Result*. Based on your request for a soft, high-performance shoe, the Futura is a great match. The sizing (40.5) is a 1.5 downsize from your 42.0 street size, providing a snug, glove-like fit without painful crushing. Turn off 'Demo Mode' and add an API key for live results.",
             "optimizedFor": "Performance"
@@ -574,17 +574,27 @@
                 scrapedShoeList = searchResult.text;
                 scrapedSources = searchResult.sources;
             } catch (error) {
-                if (error.message === "MISSING_API_KEY") {
-                    console.error("Failed to start search: MISSING_API_KEY", error);
-                    const errorBox = document.getElementById('errorMessage');
-                    errorBox.innerHTML = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please add your key to the .html file.";
-                    errorBox.classList.remove('hidden');
-                    showLoading(false, "Find My Perfect Fit");
-                    return;
-                }
+                // --- ✨ NEW: UPGRADED ERROR HANDLER (Search Step) ---
+                console.error("Failed to start search:", error);
+                const errorBox = document.getElementById('errorMessage');
+                errorBox.classList.remove('hidden');
                 
-                console.warn("Live search failed, proceeding with internal database only.", error);
-                scrapedShoeList = "Live search failed. Using internal database.";
+                let userFriendlyError = "An unknown error occurred during search.";
+                if (error.message.includes("API Error: 403")) {
+                    userFriendlyError = "<b>Security Error (403):</b> The API key is being blocked by Google. This is likely an issue with your Website Restrictions in Google Cloud. Please double-check your URLs.";
+                } else if (error.message.includes("API Error: 400")) {
+                    userFriendlyError = "<b>Bad Request (400):</b> The API key is invalid or the 'Generative Language API' might not be enabled for your project.";
+                } else if (error.message.includes("API Error: 429")) {
+                    userFriendlyError = "<b>Quota Exceeded (429):</b> You have made too many requests. Please wait and try again.";
+                } else if (error.message.includes("MISSING_API_KEY")) {
+                    userFriendlyError = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please add your key to the .html file.";
+                } else {
+                    userFriendlyError = `<b>Connection Failed:</b> ${error.message}`;
+                }
+                errorBox.innerHTML = userFriendlyError;
+                
+                showLoading(false, "Find My Perfect Fit");
+                return; // Stop execution
             }
 
             // --- ✨ STEP 2: Expert Analysis with SIZING ALGORITHM (NOW GETS IMAGE) ---
@@ -652,10 +662,25 @@
                 const shoeData = JSON.parse(jsonResponse.text);
                 displayResult(shoeData, scrapedSources);
             } catch (error) {
+                // --- ✨ NEW: UPGRADED ERROR HANDLER (Analysis Step) ---
                 console.error("Failed to get shoe recommendation:", error);
                 const errorBox = document.getElementById('errorMessage');
                 errorBox.classList.remove('hidden');
-                errorBox.innerText = "Connection failed. Please check your internet or API Limit.";
+                
+                let userFriendlyError = "An unknown error occurred during analysis.";
+                if (error.message.includes("API Error: 403")) {
+                    userFriendlyError = "<b>Security Error (403):</b> The API key is being blocked by Google. This is likely an issue with your Website Restrictions in Google Cloud. Please double-check your URLs.";
+                } else if (error.message.includes("API Error: 400")) {
+                    userFriendlyError = "<b>Bad Request (400):</b> The API key is invalid or the 'Generative Language API' might not be enabled for your project.";
+                } else if (error.message.includes("API Error: 429")) {
+                    userFriendlyError = "<b>Quota Exceeded (429):</b> You have made too many requests. Please wait and try again.";
+                } else if (error.message.includes("MISSING_API_KEY")) {
+                    userFriendlyError = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please add your key to the .html file.";
+                } else {
+                    userFriendlyError = `<b>Connection Failed:</b> ${error.message}`;
+                }
+                errorBox.innerHTML = userFriendlyError;
+
             } finally {
                 showLoading(false, "Find My Perfect Fit");
             }
@@ -689,13 +714,14 @@
                 Return *only* the tip as a single paragraph. No intro.
             `;
             const userPrompt_Tip = `
-                My level is: ${level}
+                My level: ${level}
                 My new shoe is: ${shoeModel} (which is a ${shoeType} type)
                 My primary style is: ${style}
                 Give me one concise training tip based on this.
             `;
 
             try {
+                // *** THIS IS THE FIX: callGemCini -> callGemini ***
                 const tipResult = await callGemini(systemPrompt_Tip, userPrompt_Tip);
                 document.getElementById('geminiTipText').innerText = tipResult.text;
             } catch (error) {
