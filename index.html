@@ -8,93 +8,104 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts (Inter + Merriweather) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #111; color: #eee; }
+        /* ✨ Apply Merriweather (Premium Serif) */
+        h1, #resultModel {
+            font-family: 'Merriweather', serif;
+            font-weight: 700; /* Use bold for titles */
+        }
+
+        /* ✨ NEW: AETHER GREEN THEME */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            /* Dark green gradient from the image */
+            background-color: #0d1a14;
+            background-image: linear-gradient(135deg, #0d1a14 0%, #1a472a 50%, #369678 100%);
+            color: #eee; /* Light text */
+        }
+        .main-container {
+            /* Fallback for old browsers */
+            background-color: #111;
+            /* Gradient for the container itself if body bg fails */
+            background-image: linear-gradient(135deg, #0d1a14 0%, #1a472a 50%, #369678 100%);
+        }
+
         .accent { color: #FCD34D; } /* Amber-300 */
-        .card { background-color: #1F2937; border: 1px solid #374151; }
-        .btn-primary { background-color: #FCD34D; color: #111; font-weight: bold; transition: all 0.2s; }
-        .btn-primary:hover { background-color: #F59E0B; transform: translateY(-1px); }
-        .btn-primary:disabled { background-color: #4B5563; color: #9CA3AF; cursor: not-allowed; }
+        
+        /* ✨ NEW: Glassmorphism Cards */
+        .card { 
+            background-color: rgba(0, 0, 0, 0.25); /* Translucent black */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Faint white border */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        
+        .btn-primary { 
+            background-color: #FCD34D; /* SendGuide Yellow */
+            color: #111; 
+            font-weight: bold; 
+            transition: all 0.2s; 
+        }
+        .btn-primary:hover { 
+            background-color: #F59E0B; /* Darker Yellow */
+            transform: translateY(-1px); 
+        }
+        .btn-primary:disabled { 
+            background-color: rgba(75, 85, 99, 0.5); /* Disabled gray (translucent) */
+            color: #9CA3AF; 
+            cursor: not-allowed; 
+        }
         
         /* Custom Range Slider */
         input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #FCD34D; margin-top: -6px; cursor: pointer; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #4B5563; border-radius: 2px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
 
         /* Segmented Button */
         .segment-btn {
-            border: 1px solid #4B5563;
-            background-color: #374151;
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Faint white border */
+            background-color: rgba(0, 0, 0, 0.2); /* Translucent black */
+            color: #D1D5DB; /* Gray-300 */
             transition: all 0.2s;
-            height: 100%; /* Ensure buttons in a grid are same height */
+            height: 100%;
         }
-        .segment-btn:hover { background-color: #4B5563; }
+        .segment-btn:hover { background-color: rgba(0, 0, 0, 0.3); }
         .segment-btn.selected-shape {
-            background-color: #4B5563;
-            border-color: #FCD34D;
-            color: #FCD34D;
+            background-color: rgba(252, 211, 77, 0.1); /* Translucent yellow */
+            border-color: #FCD34D; /* Yellow-400 */
+            color: #FCD34D; /* Yellow-400 */
             font-weight: 600;
         }
 
-        /* Subtle Fade-in Animation */
+        /* ... (rest of the utility styles like animations, spinner, etc.) ... */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-
-        /* Spinner */
-        .spinner {
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            width: 16px;
-            height: 16px;
-            animation: spin 1s ease-in-out infinite;
-        }
+        .spinner { border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: #fff; width: 16px; height: 16px; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* Discount Alert Animation */
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(252, 211, 77, 0.4); }
-            50% { box-shadow: 0 0 0 5px rgba(252, 211, 77, 0); }
-        }
-        .animate-pulse-border {
-            animation: pulse 2s infinite;
-        }
-
-        /* Demo Mode Toggle */
-        .toggle-bg:after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            background: white;
-            border-radius: 50%;
-            width: 1.25rem;
-            height: 1.25rem;
-            transition: all 0.2s ease;
-        }
-        input:checked + .toggle-bg:after {
-            transform: translateX(100%);
-            left: calc(100% - 2px);
-        }
-        input:checked + .toggle-bg {
-            background-color: #FCD34D;
-            border-color: #FCD34D;
-        }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(252, 211, 77, 0.4); } 50% { box-shadow: 0 0 0 5px rgba(252, 211, 77, 0); } }
+        .animate-pulse-border { animation: pulse 2s infinite; }
+        .toggle-bg:after { content: ''; position: absolute; top: 2px; left: 2px; background: white; border-radius: 50%; width: 1.25rem; height: 1.25rem; transition: all 0.2s ease; }
+        input:checked + .toggle-bg:after { transform: translateX(100%); left: calc(100% - 2px); }
+        input:checked + .toggle-bg { background-color: #FCD34D; border-color: #FCD34D; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
     <!-- MAIN CONTAINER -->
-    <div class="w-full max-w-md bg-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-800">
+    <div class="main-container w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800">
         
-        <!-- HEADER -->
-        <div class="bg-gray-800 p-6 text-center border-b border-gray-700 relative">
-            <div class="absolute top-4 right-4 text-gray-500 text-xs">v8.9-DEBUG</div>
-            <h1 class="text-3xl font-bold tracking-tighter"><i class="fa-solid fa-mountain text-yellow-400 mr-2"></i>SendGuide</h1>
-            <p class="text-gray-400 text-sm mt-1">Expert AI Sizing & Reviews</p>
+        <!-- HEADER (Glassy) -->
+        <div class="card p-6 text-center border-b border-gray-700 relative">
+            <div class="absolute top-4 right-4 text-gray-400 text-xs">v11-GREEN</div>
+            <!-- ✨ H1 will now use Merriweather -->
+            <h1 class="text-3xl font-bold tracking-tighter text-white"><i class="fa-solid fa-mountain text-yellow-400 mr-2"></i>SendGuide</h1>
+            <p class="text-gray-300 text-sm mt-1">Expert AI Sizing & Reviews</p>
         </div>
 
         <!-- INPUT FORM -->
@@ -102,17 +113,17 @@
             
             <!-- Street Size -->
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Street Shoe Size (EU)</label>
+                <label class="block text-sm font-medium text-gray-200 mb-2">Street Shoe Size (EU)</label>
                 <div class="flex items-center space-x-4">
                     <button onclick="adjustSize(-0.5)" class="w-10 h-10 rounded bg-gray-700 hover:bg-gray-600 text-white font-bold">-</button>
-                    <input type="number" id="streetSize" value="42.0" step="0.5" class="w-full text-center bg-gray-800 border border-gray-700 rounded p-2 text-xl font-bold focus:outline-none focus:border-yellow-400 text-white">
+                    <input type="number" id="streetSize" value="42.0" step="0.5" class="w-full text-center card py-2 px-3 text-xl font-bold text-white focus:outline-none focus:border-yellow-400 rounded">
                     <button onclick="adjustSize(0.5)" class="w-10 h-10 rounded bg-gray-700 hover:bg-gray-600 text-white font-bold">+</button>
                 </div>
             </div>
 
             <!-- Foot Shape -->
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Foot Shape</label>
+                <label class="block text-sm font-medium text-gray-200 mb-2">Foot Shape</label>
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="selectButton('shape-btn', 'narrow', this)" class="shape-btn segment-btn p-3 rounded text-xs text-center selected-shape">
                         <i class="fa-solid fa-ruler-vertical block mb-1 text-lg"></i>Narrow
@@ -129,7 +140,7 @@
             
             <!-- Climbing Style -->
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Primary Climbing Style</label>
+                <label class="block text-sm font-medium text-gray-200 mb-2">Primary Climbing Style</label>
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="selectButton('style-btn', 'indoor', this)" class="style-btn segment-btn p-3 rounded text-xs text-center selected-shape">
                         <i class="fa-solid fa-person-shelter block mb-1 text-lg"></i>Indoor Bouldering
@@ -146,22 +157,22 @@
 
             <!-- Shoe Type Preference (with helper text) -->
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Shoe Type Preference</label>
+                <label class="block text-sm font-medium text-gray-200 mb-2">Shoe Type Preference</label>
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="selectButton('type-btn', 'soft', this)" class="type-btn segment-btn p-3 rounded text-xs text-center selected-shape">
                         <i class="fa-solid fa-feather block mb-1 text-lg"></i>
                         <span class="font-bold">Soft / Comp</span>
-                        <span class="block text-gray-400 text-[10px] mt-1">(Sensitivity, Volumes)</span>
+                        <span class="block text-gray-300 text-[10px] mt-1">(Sensitivity, Volumes)</span>
                     </button>
                     <button onclick="selectButton('type-btn', 'all-around', this)" class="type-btn segment-btn p-3 rounded text-xs text-center">
                         <i class="fa-solid fa-balance-scale block mb-1 text-lg"></i>
                         <span class="font-bold">All-Around</span>
-                        <span class="block text-gray-400 text-[10px] mt-1">(Balanced, Versatile)</span>
+                        <span class="block text-gray-300 text-[10px] mt-1">(Balanced, Versatile)</span>
                     </button>
                     <button onclick="selectButton('type-btn', 'stiff', this)" class="type-btn segment-btn p-3 rounded text-xs text-center">
                         <i class="fa-solid fa-gavel block mb-1 text-lg"></i>
                         <span class="font-bold">Stiff / Edging</span>
-                        <span class="block text-gray-400 text-[10px] mt-1">(Small Edges, Support)</span>
+                        <span class="block text-gray-300 text-[10px] mt-1">(Small Edges, Support)</span>
                     </button>
                 </div>
                 <input type="hidden" id="shoeType" value="soft">
@@ -169,8 +180,8 @@
 
             <!-- Level -->
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Climbing Level</label>
-                <select id="level" class="w-full bg-gray-800 border border-gray-700 text-white rounded p-3 focus:outline-none focus:border-yellow-400">
+                <label class="block text-sm font-medium text-gray-200 mb-2">Climbing Level</label>
+                <select id="level" class="w-full card p-3 text-white focus:outline-none focus:border-yellow-400 rounded">
                     <option value="beginner">Beginner (V0 - V3)</option>
                     <option value="intermediate" selected>Intermediate (V4 - V7)</option>
                     <option value="advanced">Advanced (V8+)</option>
@@ -179,7 +190,7 @@
             
             <!-- Budget -->
             <div>
-                <div class="flex justify-between text-sm text-gray-300 mb-2">
+                <div class="flex justify-between text-sm text-gray-200 mb-2">
                     <label class="font-medium">Max Budget</label>
                     <span class="font-bold text-yellow-400">€<span id="budgetLabel">180</span></span>
                 </div>
@@ -188,18 +199,18 @@
             
             <!-- Fit Preference -->
             <div>
-                <div class="flex justify-between text-sm text-gray-300 mb-2">
+                <div class="flex justify-between text-sm text-gray-200 mb-2">
                     <label class="font-medium">Fit Preference</label>
                     <span class="font-bold text-yellow-400"><span id="fitLabel">Performance</span></span>
                 </div>
                 <input type="range" id="fitPref" min="0" max="100" value="70" class="w-full" oninput="updateFitLabel(this.value)">
             </div>
 
-            <!-- DEMO MODE TOGGLE (NEW) -->
-            <div class="flex items-center justify-between bg-gray-800 p-3 rounded-lg border border-gray-700">
+            <!-- DEMO MODE TOGGLE -->
+            <div class="flex items-center justify-between card p-3 rounded-lg">
                 <div class="flex items-center space-x-2">
                     <i class="fa-solid fa-vial text-yellow-400"></i>
-                    <label for="demoMode" class="text-sm font-medium text-gray-300">Demo Mode</label>
+                    <label for="demoMode" class="text-sm font-medium text-gray-200">Demo Mode</label>
                 </div>
                 <label for="demoMode" class="flex items-center cursor-pointer">
                     <div class="relative">
@@ -208,7 +219,7 @@
                     </div>
                 </label>
             </div>
-            <p id="demoModeText" class="text-xs text-gray-500 text-center">App will show an instant mock result. Turn off for live AI recommendations (requires API key).</p>
+            <p id="demoModeText" class="text-xs text-gray-400 text-center">App will show an instant mock result. Turn off for live AI recommendations (requires API key).</p>
 
 
             <button onclick="calculateFit()" id="calculateButton" class="w-full btn-primary py-4 rounded-lg text-lg shadow-lg flex items-center justify-center space-x-2">
@@ -222,7 +233,7 @@
         </div>
 
         <!-- RESULTS CONTAINER (Hidden by default) -->
-        <div id="results" class="hidden bg-gray-900 w-full">
+        <div id="results" class="hidden w-full">
             
             <!-- NEW: PRODUCT IMAGE -->
             <img id="resultImage" src="https://placehold.co/600x400/1F2937/374151?text=Loading+Image..." alt="Recommended Shoe" class="w-full h-48 object-cover hidden" onerror="this.style.display='none'">
@@ -232,13 +243,14 @@
                     <div class="inline-block p-2 px-4 bg-green-900 text-green-300 rounded-full text-xs font-bold mb-2">
                         <i class="fa-solid fa-check-circle mr-1"></i> Expert Choice
                     </div>
+                    <!-- ✨ H2 will now use Merriweather -->
                     <h2 class="text-2xl font-bold text-white" id="resultModel">Loading...</h2>
                     <p class="text-yellow-400 text-3xl font-bold mt-2" id="resultSize">EU 00.0</p>
                     <p class="text-gray-400 text-sm mt-1">Optimized for <span id="resultOptimizedFor">Performance</span></p>
                 </div>
 
                 <!-- Discount Alert Card -->
-                <div id="discountAlertCard" class="hidden bg-yellow-900 bg-opacity-30 border border-yellow-400 rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in animate-pulse-border" style="animation-delay: 100ms;">
+                <div id="discountAlertCard" class="card hidden bg-yellow-900 bg-opacity-30 border-yellow-400 rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in animate-pulse-border" style="animation-delay: 100ms;">
                     <div class="absolute top-0 left-0 w-1 h-full bg-yellow-300"></div>
                     <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-tags mr-2 text-yellow-300"></i>Discount Alert!</h3>
                     <p class="text-yellow-100 text-sm leading-relaxed" id="discountMessageText">
@@ -247,7 +259,7 @@
                 </div>
 
                 <!-- Analysis Card -->
-                <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 200ms;">
+                <div class="card rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 200ms;">
                     <div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>
                     <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-brain mr-2 text-yellow-400"></i>Sizing Logic & Consensus</h3>
                     <p class="text-gray-300 text-sm leading-relaxed" id="resultLogic">
@@ -256,7 +268,7 @@
                 </div>
                 
                 <!-- Live Data Sources -->
-                <div id="scrapedSourcesCard" class="hidden bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 300ms;">
+                <div id="scrapedSourcesCard" class="card hidden rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 300ms;">
                     <div class="absolute top-0 left-0 w-1 h-full bg-cyan-400"></div>
                     <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-globe mr-2 text-cyan-400"></i>Verified Sources</h3>
                     <p class="text-gray-400 text-xs mb-3">Sizing data verified against community consensus from:</p>
@@ -266,12 +278,12 @@
                 </div>
 
                 <!-- AI Training Tip Card -->
-                <div id="geminiTipCard" class="hidden bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6 relative overflow-hidden animate-fade-in">
+                <div id="geminiTipCard" class="card hidden rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in">
                     <div class="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
                     <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-lightbulb mr-2 text-blue-400"></i>AI Training Tip</h3>
                     <p class="text-gray-300 text-sm leading-relaxed" id="geminiTipText">
                         Loading tip...
-                    </p>
+                    </q>
                 </div>
 
                 <!-- Actions -->
@@ -299,7 +311,7 @@
         // ⚠️ IMPORTANT: PASTE YOUR API KEY BELOW
         // Get one here: https://aistudio.google.com/app/apikey
         // ---------------------------------------------------------
-        const YOUR_GOOGLE_API_KEY = "AIzaSyAN8r2v0xOOpAXQjm9kOY_Tk-BYuBrs7Xs"; 
+        const YOUR_GOOGLE_API_KEY = "PASTE_YOUR_KEY_HERE"; 
         
         // ---------------------------------------------------------
         // 💰 NEW: AFFILIATE MONETIZATION
@@ -465,7 +477,7 @@
                 systemInstruction: { parts: [{ text: systemPrompt }] },
                 contents: [{ parts: [{ text: userQuery }] }],
             };
-            if (isJson) payload.generationConfig = { responseMimeType: "application/json" };
+            if (isJson) payload.generationConfig = { responseMMimeType: "application/json" };
             if (useGrounding) payload.tools = [{ "google_search": {} }];
 
             let attempt = 0;
@@ -587,7 +599,7 @@
                 } else if (error.message.includes("API Error: 429")) {
                     userFriendlyError = "<b>Quota Exceeded (429):</b> You have made too many requests. Please wait and try again.";
                 } else if (error.message.includes("MISSING_API_KEY")) {
-                    userFriendlyError = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please add your key to the .html file.";
+                    userFriendlyError = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please complete the setup to use the live app.";
                 } else {
                     userFriendlyError = `<b>Connection Failed:</b> ${error.message}`;
                 }
@@ -663,7 +675,7 @@
                 displayResult(shoeData, scrapedSources);
             } catch (error) {
                 // --- ✨ NEW: UPGRADED ERROR HANDLER (Analysis Step) ---
-                console.error("Failed to get shoe recommendation:", error);
+                console.error("Failed to get shoe recommendation:", error.message);
                 const errorBox = document.getElementById('errorMessage');
                 errorBox.classList.remove('hidden');
                 
@@ -675,7 +687,7 @@
                 } else if (error.message.includes("API Error: 429")) {
                     userFriendlyError = "<b>Quota Exceeded (429):</b> You have made too many requests. Please wait and try again.";
                 } else if (error.message.includes("MISSING_API_KEY")) {
-                    userFriendlyError = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please add your key to the .html file.";
+                    userFriendlyError = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please complete the setup to use the live app.";
                 } else {
                     userFriendlyError = `<b>Connection Failed:</b> ${error.message}`;
                 }
