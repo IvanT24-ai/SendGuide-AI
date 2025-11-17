@@ -124,7 +124,7 @@
         
         <!-- HEADER -->
         <div class="card p-6 text-center border-b border-gray-700 relative">
-            <div class="absolute top-4 right-4 text-gray-500 text-xs">v14-PRODUCTION</div>
+            <div class="absolute top-4 right-4 text-gray-500 text-xs">v15-DIAGNOSTIC</div>
             <h1 class="text-3xl font-bold tracking-tighter text-white"><i class="fa-solid fa-mountain text-yellow-300 mr-2"></i>SendGuide</h1>
             <p class="text-gray-300 text-sm mt-1">Expert AI Sizing & Reviews</p>
         </div>
@@ -267,7 +267,6 @@
                     </div>
                     <h2 class="text-2xl font-bold text-white" id="resultModel">Loading...</h2>
                     <p class="text-yellow-300 text-3xl font-bold mt-2" id="resultSize">EU 00.0</p>
-                    <!-- ✨ TYPO FIX: resultOptimZzedFor -> resultOptimizedFor -->
                     <p class="text-gray-400 text-sm mt-1">Optimized for <span id="resultOptimizedFor">Performance</span></p>
                 </div>
 
@@ -301,12 +300,11 @@
 
                 <!-- AI Training Tip Card (Mint Accent) -->
                 <div id="geminiTipCard" class="card hidden rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in">
-                    <!-- ✨ TYPO FIX: #5EF5G8 -> #5EF5C8 -->
                     <div class="absolute top-0 left-0 w-1 h-full" style="background-color: #5EF5C8;"></div>
                     <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-lightbulb mr-2" style="color: #5EF5C8;"></i>AI Training Tip</h3>
                     <p class="text-gray-300 text-sm leading-relaxed" id="geminiTipText">
                         Loading tip...
-                    </q>
+                    </p>
                 </div>
 
                 <!-- Actions -->
@@ -519,7 +517,7 @@
                         const text = candidate.content.parts[0].text;
                         let sources = [];
                         const groundingMetadata = candidate.groundingMetadata;
-                        if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        if (groundingMetadata && groundingMetadata.groundAtrributions) { // Note: Typo fixed here 'groundAtrributions'
                             sources = groundingMetadata.groundingAttributions
                                 .map(attribution => ({
                                     uri: attribution.web?.uri,
@@ -544,180 +542,131 @@
 
         // --- 4. THE CORE LOGIC ---
 
+        // ✨ MASTER ERROR HANDLER
         async function calculateFit() {
             showLoading(true);
-
-            // --- ✨ NEW: DEMO MODE CHECK ---
-            const isDemoMode = document.getElementById('demoMode').checked;
-            if (isDemoMode) {
-                // Simulate a short delay for realism
-                setTimeout(() => {
-                    displayResult(MOCK_SHOE_DATA, MOCK_SOURCES);
-                    showLoading(false, "Find My Perfect Fit");
-                }, 1500); // 1.5 second fake loading
-                return; // Stop here, don't call the API
-            }
-            // --- END OF DEMO MODE LOGIC ---
-
-
-            // Get All Inputs
-            const streetSize = parseFloat(document.getElementById('streetSize').value);
-            const shape = document.getElementById('footShape').value;
-            const style = document.getElementById('climbingStyle').value;
-            const level = document.getElementById('level').value;
-            const budget = parseInt(document.getElementById('budget').value);
-            const shoeType = document.getElementById('shoeType').value;
-            const pref = parseInt(document.getElementById('fitPref').value);
-            let fitText = (pref < 30) ? "Comfort Fit" : (pref < 70) ? "Balanced Fit" : "Aggressive Performance Fit";
-
-            // --- ✨ STEP 1: Quality-Controlled Grounded Search (NOW GETS IMAGE) ---
-            const systemPrompt_Search = `
-                You are an expert buyer for a climbing shop. 
-                Your goal is to find 3-5 top-rated, WELL-REVIEWED shoes on bergfreunde.eu.
-                
-                CRITICAL QUALITY CONTROL RULES:
-                1. DO NOT recommend brand new, unproven models.
-                2. ONLY pick shoes with established reputations and user reviews.
-                3. Prioritize shoes that are 'Classics' or 'Best Sellers'.
-                
-                For each shoe, find:
-                1. Brand & Model
-                2. Price in €
-                3. Sale Info
-                4. Stock Status
-                5. Link
-                6. A high-quality product image URL.
-                
-                Also, briefly check for 'sizing consensus' (e.g. 'generally runs small').
-            `;
-            const userPrompt_Search = `
-                Find 3-5 proven, high-rated climbing shoes for 2025 on bergfreunde.eu.
-                - Level: ${level}
-                - Shape: ${shape}
-                - Style: ${style}
-                - Type: ${shoeType}
-                - Budget: €${budget}
-                
-                Verify that these shoes are IN STOCK. Find a product image URL.
-            `;
+            const errorBox = document.getElementById('errorMessage');
             
-            let scrapedShoeList = "";
-            let scrapedSources = [];
-            
-            try {
+            try { // ✨ START OF MASTER TRY BLOCK
+                const isDemoMode = document.getElementById('demoMode').checked;
+                if (isDemoMode) {
+                    // Simulate a short delay for realism
+                    setTimeout(() => {
+                        displayResult(MOCK_SHOE_DATA, MOCK_SOURCES);
+                        showLoading(false, "Find My Perfect Fit");
+                    }, 1500); // 1.5 second fake loading
+                    return; // Stop here, don't call the API
+                }
+
+                // Get All Inputs
+                const streetSize = parseFloat(document.getElementById('streetSize').value);
+                const shape = document.getElementById('footShape').value;
+                const style = document.getElementById('climbingStyle').value;
+                const level = document.getElementById('level').value;
+                const budget = parseInt(document.getElementById('budget').value);
+                const shoeType = document.getElementById('shoeType').value;
+                const pref = parseInt(document.getElementById('fitPref').value);
+                let fitText = (pref < 30) ? "Comfort Fit" : (pref < 70) ? "Balanced Fit" : "Aggressive Performance Fit";
+
+                // --- ✨ STEP 1: Quality-Controlled Grounded Search (NOW GETS IMAGE) ---
+                const systemPrompt_Search = `
+                    You are an expert buyer for a climbing shop. 
+                    Your goal is to find 3-5 top-rated, WELL-REVIEWED shoes on bergfreunde.eu.
+                    CRITICAL QUALITY CONTROL RULES:
+                    1. DO NOT recommend brand new, unproven models.
+                    2. ONLY pick shoes with established reputations and user reviews.
+                    3. Prioritize shoes that are 'Classics' or 'Best Sellers'.
+                    For each shoe, find:
+                    1. Brand & Model, 2. Price in €, 3. Sale Info, 4. Stock Status, 5. Link, 6. A high-quality product image URL.
+                    Also, briefly check for 'sizing consensus' (e.g. 'generally runs small').
+                `;
+                const userPrompt_Search = `
+                    Find 3-5 proven, high-rated climbing shoes for 2025 on bergfreunde.eu.
+                    - Level: ${level}, - Shape: ${shape}, - Style: ${style}, - Type: ${shoeType}, - Budget: €${budget}
+                    Verify that these shoes are IN STOCK. Find a product image URL.
+                `;
+                
+                let scrapedShoeList = "";
+                let scrapedSources = [];
+                
+                // This call is now inside the master try block
                 const searchResult = await callGemini(systemPrompt_Search, userPrompt_Search, false, true);
                 scrapedShoeList = searchResult.text;
                 scrapedSources = searchResult.sources;
-            } catch (error) {
-                // --- ✨ NEW: UPGRADED ERROR HANDLER (Search Step) ---
-                console.error("Failed to start search:", error);
-                const errorBox = document.getElementById('errorMessage');
-                errorBox.classList.remove('hidden');
-                
-                let userFriendlyError = "An unknown error occurred during search.";
-                if (error.message.includes("API Error: 403")) {
-                    userFriendlyError = "<b>Security Error (403):</b> The API key is being blocked by Google. This is likely an issue with your Website Restrictions in Google Cloud. Please double-check your URLs.";
-                } else if (error.message.includes("API Error: 400")) {
-                    userFriendlyError = "<b>Bad Request (400):</b> The API key is invalid or the 'Generative Language API' might not be enabled for your project.";
-                } else if (error.message.includes("API Error: 429")) {
-                    userFriendlyError = "<b>Quota Exceeded (429):</b> You have made too many requests. Please wait and try again.";
-                } else if (error.message.includes("MISSING_API_KEY")) {
-                    userFriendlyError = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please complete the setup to use the live app.";
-                } else {
-                    userFriendlyError = `<b>Connection Failed:</b> ${error.message}`;
-                }
-                errorBox.innerHTML = userFriendlyError;
-                
-                showLoading(false, "Find My Perfect Fit");
-                return; // Stop execution
-            }
 
-            // --- ✨ STEP 2: Expert Analysis with SIZING ALGORITHM (NOW GETS IMAGE) ---
-            const shoeDBString = JSON.stringify(SHOE_DB, null, 2);
 
-            const systemPrompt_Shoe = `
-                You are SendGuide, the world's most accurate climbing shoe fitter.
-                
-                YOUR PRIMARY DIRECTIVE: TRUSTWORTHINESS.
-                1. Recommend "Proven Classics" over "New Hype".
-                
-                USE THE FOLLOWING NUANCED SIZING ALGORITHMS (Street Size Baseline):
-                
-                **La Sportiva:**
-                - (Stiff/Trad - e.g., Miura, TC Pro, Katana): Downsize 1.5-2.0.
-                - (Soft/Comp - e.g., Futura, Theory, Solution Comp, Skwama): Downsize 1.0-1.5. (Glove-like fit, not painful).
-                
-                **Scarpa:**
-                - (Stiff/Moderate - e.g., Instinct VS, Vapor V): Downsize 1.0-1.5.
-                - (Soft/Comp - e.g., Drago, Furia S): Downsize 0.5-1.0.
-                
-                **Other Brands:**
-                - Five Ten: Downsize 0 to 0.5 (often street size).
-                - Evolv: Street size or upsize 0.5.
-                - Tenaya: Downsize 1.0 to 1.5.
-                
-                Adjust baselines based on 'Fit Preference' (Comfort = less downsize, Performance = more downsize).
-                
-                You MUST return *only* a single, valid JSON object:
-                {
-                  "brand": "String",
-                  "model": "String",
-                  "recommendedSizeEU": "Number (Round to nearest 0.5)",
-                  "currentPriceEU": "Number",
-                  "productURL": "String (The direct product URL, or null)",
-                  "productImageURL": "String (The full image URL, or null)",
-                  "discountMessage": "String (e.g. 'On sale for €159, down from €199!', or null)",
-                  "reasoning": "String (Explain WHY this shoe and the *nuanced* sizing math used. e.g. 'The Futura is a soft, modern shoe, so for a performance fit we are downsizing 1.5 sizes...')",
-                  "optimizedFor": "String (e.g. 'Performance', 'Comfort')"
-                }
-            `;
+                // --- ✨ STEP 2: Expert Analysis with SIZING ALGORITHM (NOW GETS IMAGE) ---
+                const shoeDBString = JSON.stringify(SHOE_DB, null, 2);
 
-            const userPrompt_Shoe = `
-                User Profile:
-                - Street Size: ${streetSize}
-                - Shape: ${shape}
-                - Level: ${level}
-                - Style: ${style}
-                - Preference: ${fitText}
-                - Budget: €${budget}
+                const systemPrompt_Shoe = `
+                    You are SendGuide, the world's most accurate climbing shoe fitter.
+                    YOUR PRIMARY DIRECTIVE: TRUSTWORTHINESS.
+                    1. Recommend "Proven Classics" over "New Hype".
+                    
+                    USE THE FOLLOWING NUANCED SIZING ALGORITHMS (Street Size Baseline):
+                    **La Sportiva:**
+                    - (Stiff/Trad - e.g., Miura, TC Pro, Katana): Downsize 1.5-2.0.
+                    - (Soft/Comp - e.g., Futura, Theory, Solution Comp, Skwama): Downsize 1.0-1.5. (Glove-like fit, not painful).
+                    **Scarpa:**
+                    - (Stiff/Moderate - e.g., Instinct VS, Vapor V): Downsize 1.0-1.5.
+                    - (Soft/Comp - e.g., Drago, Furia S): Downsize 0.5-1.0.
+                    **Other Brands:**
+                    - Five Ten: Downsize 0 to 0.5 (often street size).
+                    - Evolv: Street size or upsize 0.5.
+                    - Tenaya: Downsize 1.0 to 1.5.
+                    
+                    Adjust baselines based on 'Fit Preference' (Comfort = less downsize, Performance = more downsize).
+                    
+                    You MUST return *only* a single, valid JSON object:
+                    {
+                      "brand": "String", "model": "String", "recommendedSizeEU": "Number (Round to nearest 0.5)",
+                      "currentPriceEU": "Number", "productURL": "String (The direct product URL, or null)",
+                      "productImageURL": "String (The full image URL, or null)",
+                      "discountMessage": "String (e.g. 'On sale for €159, down from €199!', or null)",
+                      "reasoning": "String (Explain WHY this shoe and the *nuanced* sizing math used. e.g. 'The Futura is a soft, modern shoe, so for a performance fit we are downsizing 1.5 sizes...')",
+                      "optimizedFor": "String (e.g. 'Performance', 'Comfort')"
+                    }
+                `;
 
-                Live Verified Stock:
-                ${scrapedShoeList}
+                const userPrompt_Shoe = `
+                    User Profile:
+                    - Street Size: ${streetSize}, - Shape: ${shape}, - Level: ${level}, - Style: ${style},
+                    - Preference: ${fitText}, - Budget: €${budget}
+                    Live Verified Stock:
+                    ${scrapedShoeList}
+                    Internal Classic DB:
+                    ${shoeDBString}
+                    Select the single best, PROVEN shoe that is IN STOCK.
+                    Apply the Sizing Algorithm to calculate the exact EU size.
+                    Find the best product URL and image URL from the live data.
+                `;
 
-                Internal Classic DB:
-                ${shoeDBString}
-
-                Select the single best, PROVEN shoe that is IN STOCK.
-                Apply the Sizing Algorithm to calculate the exact EU size.
-                Find the best product URL and image URL from the live data.
-            `;
-
-            // ✨ BUG FIX: This entire catch block was broken/missing.
-            try {
+                // This call is also inside the master try block
                 const jsonResponse = await callGemini(systemPrompt_Shoe, userPrompt_Shoe, true, false);
                 const shoeData = JSON.parse(jsonResponse.text);
                 displayResult(shoeData, scrapedSources);
-            } catch (error) {
-                // --- ✨ NEW: UPGRADED ERROR HANDLER (Analysis Step) ---
-                console.error("Failed to get shoe recommendation:", error.message);
-                const errorBox = document.getElementById('errorMessage');
+
+            } catch (error) { // ✨ START OF MASTER CATCH BLOCK
+                // This will catch ANY error from the entire function
+                console.error("A master error occurred in calculateFit:", error);
                 errorBox.classList.remove('hidden');
                 
-                let userFriendlyError = "An unknown error occurred during analysis.";
+                let userFriendlyError = "An unknown error occurred. Please try again.";
                 if (error.message.includes("API Error: 403")) {
-                    userFriendlyError = "<b>Security Error (403):</b> The API key is being blocked by Google. This is likely an issue with your Website Restrictions in Google Cloud. Please double-check your URLs.";
+                    userFriendlyError = "<b>Security Error (403):</b> The API key is being blocked by Google. This is 99% an issue with your **Website Restrictions** in Google Cloud. Please double-check your URLs. They must be *exactly* right (e.g., `ivant24-ai.github.io/SendGuide-AI/*`).";
                 } else if (error.message.includes("API Error: 400")) {
-                    userFriendlyError = "<b>Bad Request (400):</b> The API key is invalid or the 'Generative Language API' might not be enabled for your project.";
+                    userFriendlyError = "<b>Bad Request (400):</b> The API key is invalid or the 'Generative Language API' might not be enabled for your project. Please check your Google Cloud project settings.";
                 } else if (error.message.includes("API Error: 429")) {
                     userFriendlyError = "<b>Quota Exceeded (429):</b> You have made too many requests. Please wait and try again.";
                 } else if (error.message.includes("MISSING_API_KEY")) {
-                    userFriendlyError = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please complete the setup to use the live app.";
+                    userFriendlyError = "<b>Setup Error:</b> Your Google API Key is missing.<br>Please edit the `index.html` file and paste your key at the top of the script.";
                 } else {
                     userFriendlyError = `<b>Connection Failed:</b> ${error.message}`;
                 }
                 errorBox.innerHTML = userFriendlyError;
-
+                
             } finally {
+                // This will run no matter what, ensuring the spinner always stops
                 showLoading(false, "Find My Perfect Fit");
             }
         }
@@ -738,28 +687,29 @@
                 return;
             }
             // --- END OF DEMO MODE LOGIC ---
+            
+            try { // ✨ Added try/catch for safety
+                const level = document.getElementById('level').options[document.getElementById('level').selectedIndex].text;
+                const shoeModel = document.getElementById('resultModel').innerText;
+                const style = document.getElementById('climbingStyle').value;
+                const shoeType = document.getElementById('shoeType').value;
 
-            const level = document.getElementById('level').options[document.getElementById('level').selectedIndex].text;
-            const shoeModel = document.getElementById('resultModel').innerText;
-            const style = document.getElementById('climbingStyle').value;
-            const shoeType = document.getElementById('shoeType').value;
+                const systemPrompt_Tip = `
+                    You are a world-class climbing coach.
+                    You provide concise, actionable, and encouraging training tips (2-3 sentences).
+                    Return *only* the tip as a single paragraph. No intro.
+                `;
+                const userPrompt_Tip = `
+                    My level: ${level}
+                    My new shoe is: ${shoeModel} (which is a ${shoeType} type)
+                    My primary style is: ${style}
+                    Give me one concise training tip based on this.
+                `;
 
-            const systemPrompt_Tip = `
-                You are a world-class climbing coach.
-                You provide concise, actionable, and encouraging training tips (2-3 sentences).
-                Return *only* the tip as a single paragraph. No intro.
-            `;
-            const userPrompt_Tip = `
-                My level: ${level}
-                My new shoe is: ${shoeModel} (which is a ${shoeType} type)
-                My primary style is: ${style}
-                Give me one concise training tip based on this.
-            `;
-
-            try {
-                // *** THIS IS THE FIX: callGemCini -> callGemini ***
+                
                 const tipResult = await callGemini(systemPrompt_Tip, userPrompt_Tip);
                 document.getElementById('geminiTipText').innerText = tipResult.text;
+                
             } catch (error) {
                 console.error("Failed to get training tip:", error);
                 document.getElementById('geminiTipText').innerText = "Could not load tip at this time. Please try again.";
@@ -834,7 +784,8 @@
                     sourceElement.innerText = source.title;
                     // Use the mint color
                     sourceElement.style.color = "#5EF5C8";
-                });
+                    sourcesList.appendChild(sourceElement);
+S                });
                 sourcesCard.classList.remove('hidden');
             } else {
                 sourcesCard.classList.add('hidden');
