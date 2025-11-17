@@ -9,78 +9,83 @@
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts (Inter + Merriweather) -->
+    <!-- ✨ Google Fonts (Plus Jakarta Sans) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
 
     <style>
-        /* ✨ Apply Merriweather (Premium Serif) */
-        h1, #resultModel {
-            font-family: 'Merriweather', serif;
-            font-weight: 700; /* Use bold for titles */
-        }
-
-        /* ✨ NEW: AETHER GREEN THEME */
+        /* ✨ DEV THEME (based on user palette) */
         body { 
-            font-family: 'Inter', sans-serif; 
-            /* Dark green gradient from the image */
-            background-color: #0d1a14;
-            background-image: linear-gradient(135deg, #0d1a14 0%, #1a472a 50%, #369678 100%);
+            /* ✨ FONT CHANGE: Plus Jakarta Sans */
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            /* Base: Deep Charcoal Blue */
+            background-color: #0D1117; 
             color: #eee; /* Light text */
         }
+        
+        /* Apply bold/extrabold for titles */
+        h1, #resultModel, .font-bold {
+            font-weight: 800; /* Extrabold for impact */
+        }
+        .font-medium {
+            font-weight: 700; /* Bold */
+        }
+        
         .main-container {
-            /* Fallback for old browsers */
-            background-color: #111;
-            /* Gradient for the container itself if body bg fails */
-            background-image: linear-gradient(135deg, #0d1a14 0%, #1a472a 50%, #369678 100%);
+            background-color: #0D1117;
         }
 
-        .accent { color: #FCD34D; } /* Amber-300 */
+        .accent { color: #FFD73A; } /* Accent: Neon Yellow */
         
-        /* ✨ NEW: Glassmorphism Cards */
+        /* Cards: Gunmetal */
         .card { 
-            background-color: rgba(0, 0, 0, 0.25); /* Translucent black */
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Faint white border */
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background-color: #1A1F24; /* Gunmetal */
+            border: 1px solid #30363d; /* Faint border */
         }
         
+        /* Primary Button: Neon Yellow */
         .btn-primary { 
-            background-color: #FCD34D; /* SendGuide Yellow */
-            color: #111; 
-            font-weight: bold; 
+            background-color: #FFD73A; /* Neon Yellow */
+            color: #1A1F24; /* Dark Gunmetal text for contrast */
+            font-weight: 700; 
             transition: all 0.2s; 
         }
         .btn-primary:hover { 
-            background-color: #F59E0B; /* Darker Yellow */
+            background-color: #e6c034; /* Darker Yellow */
             transform: translateY(-1px); 
         }
         .btn-primary:disabled { 
-            background-color: rgba(75, 85, 99, 0.5); /* Disabled gray (translucent) */
-            color: #9CA3AF; 
+            background-color: #1A1F24;
+            color: #6a737d; 
             cursor: not-allowed; 
         }
         
         /* Custom Range Slider */
         input[type=range] { -webkit-appearance: none; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #FCD34D; margin-top: -6px; cursor: pointer; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #FFD73A; margin-top: -6px; cursor: pointer; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #30363d; border-radius: 2px; }
 
         /* Segmented Button */
         .segment-btn {
-            border: 1px solid rgba(255, 255, 255, 0.2); /* Faint white border */
-            background-color: rgba(0, 0, 0, 0.2); /* Translucent black */
-            color: #D1D5DB; /* Gray-300 */
+            border: 1px solid #30363d; 
+            background-color: #0D1117; 
+            color: #D1D5DB; 
             transition: all 0.2s;
             height: 100%;
         }
-        .segment-btn:hover { background-color: rgba(0, 0, 0, 0.3); }
+        .segment-btn:hover { background-color: #1A1F24; }
         .segment-btn.selected-shape {
-            background-color: rgba(252, 211, 77, 0.1); /* Translucent yellow */
-            border-color: #FCD34D; /* Yellow-400 */
-            color: #FCD34D; /* Yellow-400 */
-            font-weight: 600;
+            background-color: rgba(255, 215, 58, 0.1); /* Translucent yellow */
+            border-color: #FFD73A; 
+            color: #FFD73A; 
+            font-weight: 700;
+        }
+        
+        /* Select Dropdown */
+        select {
+            background-color: #1A1F24;
+            border: 1px solid #30363d;
         }
 
         /* ... (rest of the utility styles like animations, spinner, etc.) ... */
@@ -88,11 +93,28 @@
         .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
         .spinner { border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: #fff; width: 16px; height: 16px; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(252, 211, 77, 0.4); } 50% { box-shadow: 0 0 0 5px rgba(252, 211, 77, 0); } }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 58, 0.4); } 50% { box-shadow: 0 0 0 5px rgba(255, 215, 58, 0); } }
         .animate-pulse-border { animation: pulse 2s infinite; }
-        .toggle-bg:after { content: ''; position: absolute; top: 2px; left: 2px; background: white; border-radius: 50%; width: 1.25rem; height: 1.25rem; transition: all 0.2s ease; }
-        input:checked + .toggle-bg:after { transform: translateX(100%); left: calc(100% - 2px); }
-        input:checked + .toggle-bg { background-color: #FCD34D; border-color: #FCD34D; }
+        
+        /* ✨ TOGGLE FIX */
+        .toggle-bg:after { 
+            content: ''; 
+            position: absolute; 
+            top: 2px; 
+            left: 2px; 
+            background: white; 
+            border-radius: 50%; 
+            width: 1.25rem; /* 20px */
+            height: 1.25rem; /* 20px */
+            transition: all 0.2s ease; 
+        }
+        input:checked + .toggle-bg:after { 
+            transform: translateX(1.25rem); /* 20px - This is the fix */
+        }
+        input:checked + .toggle-bg { 
+            background-color: #FFD73A; 
+            border-color: #FFD73A; 
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -100,11 +122,10 @@
     <!-- MAIN CONTAINER -->
     <div class="main-container w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800">
         
-        <!-- HEADER (Glassy) -->
+        <!-- HEADER -->
         <div class="card p-6 text-center border-b border-gray-700 relative">
-            <div class="absolute top-4 right-4 text-gray-400 text-xs">v11-GREEN</div>
-            <!-- ✨ H1 will now use Merriweather -->
-            <h1 class="text-3xl font-bold tracking-tighter text-white"><i class="fa-solid fa-mountain text-yellow-400 mr-2"></i>SendGuide</h1>
+            <div class="absolute top-4 right-4 text-gray-500 text-xs">v14-PRODUCTION</div>
+            <h1 class="text-3xl font-bold tracking-tighter text-white"><i class="fa-solid fa-mountain text-yellow-300 mr-2"></i>SendGuide</h1>
             <p class="text-gray-300 text-sm mt-1">Expert AI Sizing & Reviews</p>
         </div>
 
@@ -116,7 +137,7 @@
                 <label class="block text-sm font-medium text-gray-200 mb-2">Street Shoe Size (EU)</label>
                 <div class="flex items-center space-x-4">
                     <button onclick="adjustSize(-0.5)" class="w-10 h-10 rounded bg-gray-700 hover:bg-gray-600 text-white font-bold">-</button>
-                    <input type="number" id="streetSize" value="42.0" step="0.5" class="w-full text-center card py-2 px-3 text-xl font-bold text-white focus:outline-none focus:border-yellow-400 rounded">
+                    <input type="number" id="streetSize" value="42.0" step="0.5" class="w-full text-center card py-2 px-3 text-xl font-bold text-white focus:outline-none focus:border-yellow-300 rounded">
                     <button onclick="adjustSize(0.5)" class="w-10 h-10 rounded bg-gray-700 hover:bg-gray-600 text-white font-bold">+</button>
                 </div>
             </div>
@@ -181,7 +202,7 @@
             <!-- Level -->
             <div>
                 <label class="block text-sm font-medium text-gray-200 mb-2">Climbing Level</label>
-                <select id="level" class="w-full card p-3 text-white focus:outline-none focus:border-yellow-400 rounded">
+                <select id="level" class="w-full card p-3 text-white focus:outline-none focus:border-yellow-300 rounded">
                     <option value="beginner">Beginner (V0 - V3)</option>
                     <option value="intermediate" selected>Intermediate (V4 - V7)</option>
                     <option value="advanced">Advanced (V8+)</option>
@@ -192,7 +213,7 @@
             <div>
                 <div class="flex justify-between text-sm text-gray-200 mb-2">
                     <label class="font-medium">Max Budget</label>
-                    <span class="font-bold text-yellow-400">€<span id="budgetLabel">180</span></span>
+                    <span class="font-bold text-yellow-300">€<span id="budgetLabel">180</span></span>
                 </div>
                 <input type="range" id="budget" min="80" max="250" value="180" class="w-full" oninput="document.getElementById('budgetLabel').innerText = this.value">
             </div>
@@ -201,7 +222,7 @@
             <div>
                 <div class="flex justify-between text-sm text-gray-200 mb-2">
                     <label class="font-medium">Fit Preference</label>
-                    <span class="font-bold text-yellow-400"><span id="fitLabel">Performance</span></span>
+                    <span class="font-bold text-yellow-300"><span id="fitLabel">Performance</span></span>
                 </div>
                 <input type="range" id="fitPref" min="0" max="100" value="70" class="w-full" oninput="updateFitLabel(this.value)">
             </div>
@@ -209,12 +230,13 @@
             <!-- DEMO MODE TOGGLE -->
             <div class="flex items-center justify-between card p-3 rounded-lg">
                 <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-vial text-yellow-400"></i>
+                    <i class="fa-solid fa-vial text-yellow-300"></i>
                     <label for="demoMode" class="text-sm font-medium text-gray-200">Demo Mode</label>
                 </div>
                 <label for="demoMode" class="flex items-center cursor-pointer">
                     <div class="relative">
                         <input type="checkbox" id="demoMode" class="sr-only" checked onchange="toggleDemoText(this.checked)">
+                        <!-- The w-11 (2.75rem / 44px) container -->
                         <div class="toggle-bg block bg-gray-600 border border-gray-500 w-11 h-7 rounded-full"></div>
                     </div>
                 </label>
@@ -236,16 +258,16 @@
         <div id="results" class="hidden w-full">
             
             <!-- NEW: PRODUCT IMAGE -->
-            <img id="resultImage" src="https://placehold.co/600x400/1F2937/374151?text=Loading+Image..." alt="Recommended Shoe" class="w-full h-48 object-cover hidden" onerror="this.style.display='none'">
+            <img id="resultImage" src="https://placehold.co/600x400/1A1F24/30363d?text=Loading+Image..." alt="Recommended Shoe" class="w-full h-48 object-cover hidden" onerror="this.style.display='none'">
 
             <div class="p-6">
                 <div class="text-center mb-6 animate-fade-in" style="animation-delay: 0ms;">
                     <div class="inline-block p-2 px-4 bg-green-900 text-green-300 rounded-full text-xs font-bold mb-2">
                         <i class="fa-solid fa-check-circle mr-1"></i> Expert Choice
                     </div>
-                    <!-- ✨ H2 will now use Merriweather -->
                     <h2 class="text-2xl font-bold text-white" id="resultModel">Loading...</h2>
-                    <p class="text-yellow-400 text-3xl font-bold mt-2" id="resultSize">EU 00.0</p>
+                    <p class="text-yellow-300 text-3xl font-bold mt-2" id="resultSize">EU 00.0</p>
+                    <!-- ✨ TYPO FIX: resultOptimZzedFor -> resultOptimizedFor -->
                     <p class="text-gray-400 text-sm mt-1">Optimized for <span id="resultOptimizedFor">Performance</span></p>
                 </div>
 
@@ -260,27 +282,28 @@
 
                 <!-- Analysis Card -->
                 <div class="card rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 200ms;">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>
-                    <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-brain mr-2 text-yellow-400"></i>Sizing Logic & Consensus</h3>
+                    <div class="absolute top-0 left-0 w-1 h-full bg-yellow-300"></div>
+                    <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-brain mr-2 text-yellow-300"></i>Sizing Logic & Consensus</h3>
                     <p class="text-gray-300 text-sm leading-relaxed" id="resultLogic">
                         Loading analysis...
                     </p>
                 </div>
                 
-                <!-- Live Data Sources -->
+                <!-- Live Data Sources (Mint Accent) -->
                 <div id="scrapedSourcesCard" class="card hidden rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in" style="animation-delay: 300ms;">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-cyan-400"></div>
-                    <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-globe mr-2 text-cyan-400"></i>Verified Sources</h3>
+                    <div class="absolute top-0 left-0 w-1 h-full" style="background-color: #5EF5C8;"></div>
+                    <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-globe mr-2" style="color: #5EF5C8;"></i>Verified Sources</h3>
                     <p class="text-gray-400 text-xs mb-3">Sizing data verified against community consensus from:</p>
                     <div id="scrapedSourcesList" class="space-y-2">
                         <!-- Links will be injected here -->
                     </div>
                 </div>
 
-                <!-- AI Training Tip Card -->
+                <!-- AI Training Tip Card (Mint Accent) -->
                 <div id="geminiTipCard" class="card hidden rounded-lg p-4 mb-6 relative overflow-hidden animate-fade-in">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
-                    <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-lightbulb mr-2 text-blue-400"></i>AI Training Tip</h3>
+                    <!-- ✨ TYPO FIX: #5EF5G8 -> #5EF5C8 -->
+                    <div class="absolute top-0 left-0 w-1 h-full" style="background-color: #5EF5C8;"></div>
+                    <h3 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-lightbulb mr-2" style="color: #5EF5C8;"></i>AI Training Tip</h3>
                     <p class="text-gray-300 text-sm leading-relaxed" id="geminiTipText">
                         Loading tip...
                     </q>
@@ -311,7 +334,7 @@
         // ⚠️ IMPORTANT: PASTE YOUR API KEY BELOW
         // Get one here: https://aistudio.google.com/app/apikey
         // ---------------------------------------------------------
-        const YOUR_GOOGLE_API_KEY = "PASTE_YOUR_KEY_HERE"; 
+        const YOUR_GOOGLE_API_KEY = "AIzaSyAN8r2v0xOOpAXQjm9kOY_Tk-BYuBrs7Xs"; 
         
         // ---------------------------------------------------------
         // 💰 NEW: AFFILIATE MONETIZATION
@@ -477,7 +500,7 @@
                 systemInstruction: { parts: [{ text: systemPrompt }] },
                 contents: [{ parts: [{ text: userQuery }] }],
             };
-            if (isJson) payload.generationConfig = { responseMMimeType: "application/json" };
+            if (isJson) payload.generationConfig = { responseMimeType: "application/json" };
             if (useGrounding) payload.tools = [{ "google_search": {} }];
 
             let attempt = 0;
@@ -669,6 +692,7 @@
                 Find the best product URL and image URL from the live data.
             `;
 
+            // ✨ BUG FIX: This entire catch block was broken/missing.
             try {
                 const jsonResponse = await callGemini(systemPrompt_Shoe, userPrompt_Shoe, true, false);
                 const shoeData = JSON.parse(jsonResponse.text);
@@ -806,9 +830,10 @@
                     const sourceElement = document.createElement('a');
                     sourceElement.href = source.uri;
                     sourceElement.target = "_blank";
-                    sourceElement.className = "block truncate text-sm text-cyan-400 hover:underline";
+                    sourceElement.className = "block truncate text-sm hover:underline";
                     sourceElement.innerText = source.title;
-                    sourcesList.appendChild(sourceElement);
+                    // Use the mint color
+                    sourceElement.style.color = "#5EF5C8";
                 });
                 sourcesCard.classList.remove('hidden');
             } else {
