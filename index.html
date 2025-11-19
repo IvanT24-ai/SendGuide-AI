@@ -1,4 +1,30 @@
-<!DOCTYPE html>
+// ============================================
+        // DISPLAY WITH DEBUGGING
+        // ============================================
+        function displayResult(shoeData, sources = []) {
+            console.log("displayResult called with:", shoeData);
+            console.log("Sources:", sources);
+            
+            document.getElementById('inputForm').classList.add('hidden');
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.classList.remove('hidden');
+            window.scrollTo(0, 0);
+            
+            const imgEl = document.getElementById('resultImage');
+            if (shoeData.productImageURL) {
+                imgEl.src = shoeData.productImageURL;
+                imgEl.classList.remove('hidden');
+                console.log("Image set to:", shoeData.productImageURL);
+            } else {
+                imgEl.classList.add('hidden');
+                console.log("No product image available");
+            }
+
+            document.getElementById('resultModel').innerText = `${shoeData.brand} ${shoeData.model}`;
+            document.getElementById('resultSize').innerText = `EU ${shoeData.recommendedSizeEU}`;
+            document.getElementById('resultPrice').innerText = shoeData.currentPriceEU;
+            document.getElementById('resultOptimizedFor').innerText = shoeData.optimizedFor;
+            <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -135,7 +161,7 @@
         
         <!-- HEADER -->
         <div class="card p-4 sm:p-6 text-center border-b border-gray-700 relative">
-            <div class="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 text-xs">v2.0</div>
+            <div class="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 text-xs">v2.1-DEBUG</div>
             <h1 class="text-2xl sm:text-3xl font-bold tracking-tighter text-white">
                 <i class="fa-solid fa-mountain text-yellow-300 mr-2"></i>SendGuide
             </h1>
@@ -448,6 +474,12 @@
         }
         
         window.onload = () => {
+            console.log("=== SENDGUIDE INITIALIZED ===");
+            console.log("API Key present:", !!YOUR_GOOGLE_API_KEY && YOUR_GOOGLE_API_KEY.length > 30);
+            console.log("API Key starts with:", YOUR_GOOGLE_API_KEY.substring(0, 10) + "...");
+            console.log("Current domain:", window.location.hostname);
+            console.log("Affiliate ID:", YOUR_AWIN_AFFILIATE_ID.includes("YOUR_AWIN") ? "Not configured" : "Configured");
+            
             document.getElementById('budgetLabel').innerText = document.getElementById('budget').value;
             updateFitLabel(document.getElementById('fitPref').value);
             toggleDemoText(document.getElementById('demoMode').checked);
@@ -507,10 +539,13 @@
         }
 
         // ============================================
-        // GEMINI API
+        // GEMINI API WITH ENHANCED DEBUGGING
         // ============================================
         async function callGemini(systemPrompt, userQuery, isJson = false, useGrounding = false, maxRetries = 3) {
+            console.log("callGemini called with:", { isJson, useGrounding, maxRetries });
+            
             if (!YOUR_GOOGLE_API_KEY || YOUR_GOOGLE_API_KEY.length < 30 || YOUR_GOOGLE_API_KEY.includes("YOUR_API_KEY")) {
+                console.error("API key validation failed");
                 throw new Error("MISSING_API_KEY");
             }
 
@@ -522,25 +557,43 @@
             if (isJson) payload.generationConfig = { responseMimeType: "application/json" };
             if (useGrounding) payload.tools = [{ "google_search": {} }];
 
+            console.log("API payload prepared:", { hasSystemPrompt: !!systemPrompt, hasUserQuery: !!userQuery, isJson, useGrounding });
+
             let attempt = 0;
             while (attempt < maxRetries) {
                 try {
+                    console.log(`API call attempt ${attempt + 1}/${maxRetries}...`);
+                    
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
                     
+                    console.log(`API response status: ${response.status} ${response.statusText}`);
+                    
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({}));
+                        console.error("API error response:", errorData);
                         throw new Error(`API_ERROR_${response.status}`);
                     }
                     
                     const result = await response.json();
+                    console.log("API response structure:", {
+                        hasCandidates: !!result.candidates,
+                        candidateCount: result.candidates?.length || 0,
+                        hasContent: !!result.candidates?.[0]?.content,
+                        hasParts: !!result.candidates?.[0]?.content?.parts,
+                        partsCount: result.candidates?.[0]?.content?.parts?.length || 0
+                    });
+                    
                     const candidate = result.candidates?.[0];
                     
                     if (candidate && candidate.content?.parts?.[0]?.text) {
                         const text = candidate.content.parts[0].text;
+                        console.log("Response text length:", text.length);
+                        console.log("Response preview:", text.substring(0, 150) + "...");
+                        
                         let sources = [];
                         
                         const groundingMetadata = candidate.groundingMetadata;
@@ -551,16 +604,23 @@
                                     title: attr.web?.title,
                                 }))
                                 .filter(s => s.uri && s.title);
+                            console.log("Grounding sources found:", sources.length);
                         }
+                        
                         return { text, sources };
                     } else {
-                        throw new Error("Invalid API response structure");
+                        console.error("Invalid response structure:", result);
+                        throw new Error("Invalid API response structure - no text in response");
                     }
                 } catch (error) {
                     console.error(`Attempt ${attempt + 1} failed:`, error);
                     attempt++;
-                    if (attempt >= maxRetries) throw error;
+                    if (attempt >= maxRetries) {
+                        console.error("All retry attempts exhausted");
+                        throw error;
+                    }
                     const delay = Math.pow(2, attempt - 1) * 1000 + Math.random() * 500;
+                    console.log(`Waiting ${Math.round(delay)}ms before retry...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
@@ -568,14 +628,18 @@
         }
 
         // ============================================
-        // CORE LOGIC
+        // CORE LOGIC WITH DEBUGGING
         // ============================================
         async function calculateFit() {
             showLoading(true);
             const errorBox = document.getElementById('errorMessage');
             
+            console.log("=== SENDGUIDE DEBUG START ===");
+            
             try {
                 const isDemoMode = document.getElementById('demoMode').checked;
+                console.log("Demo Mode:", isDemoMode);
+                
                 if (isDemoMode) {
                     setTimeout(() => {
                         displayResult(MOCK_SHOE_DATA, MOCK_SOURCES);
@@ -593,102 +657,118 @@
                 const pref = parseInt(document.getElementById('fitPref').value);
                 let fitText = (pref < 30) ? "Comfort" : (pref < 70) ? "Balanced" : "Performance";
 
-                // STEP 1: Search bergfreunde.eu
-                const systemPrompt_Search = `You are an expert climbing gear buyer. Find 3-5 proven, well-reviewed climbing shoes on bergfreunde.eu.
-                CRITICAL RULES:
-                - Only recommend established models with strong community reputation
-                - Prioritize "classics" and "best sellers" 
-                - Verify IN-STOCK status
-                - Include product image URL, price, sale info, sizing consensus
-                - Focus on 2024-2025 available models`;
+                console.log("User Input:", { streetSize, shape, style, level, budget, shoeType, fitText });
 
-                const userPrompt_Search = `Find top-rated climbing shoes for:
-                - Level: ${level}
-                - Foot: ${shape}
-                - Style: ${style}
-                - Type: ${shoeType}
-                - Budget: €${budget}
-                Include stock status, pricing, and high-quality product images.`;
+                // STEP 1: Simplified search without grounding first
+                console.log("Step 1: Starting search...");
+                
+                const systemPrompt_Search = `You are an expert climbing shoe advisor. Recommend 3-5 proven climbing shoes based on the user's criteria. List the brand, model, typical price range, and why it's suitable.`;
+
+                const userPrompt_Search = `Recommend climbing shoes for:
+- Level: ${level}
+- Foot shape: ${shape}
+- Style: ${style}
+- Shoe type: ${shoeType}
+- Budget: €${budget}
+Provide established, well-reviewed models from brands like La Sportiva, Scarpa, Five Ten, Tenaya, or Evolv.`;
                 
                 let scrapedShoeList = "";
                 let scrapedSources = [];
                 
-                const searchResult = await callGemini(systemPrompt_Search, userPrompt_Search, false, true);
-                scrapedShoeList = searchResult.text;
-                scrapedSources = searchResult.sources;
+                try {
+                    console.log("Calling Gemini API for search...");
+                    const searchResult = await callGemini(systemPrompt_Search, userPrompt_Search, false, true);
+                    scrapedShoeList = searchResult.text;
+                    scrapedSources = searchResult.sources;
+                    console.log("Search complete. Sources found:", scrapedSources.length);
+                    console.log("Search results:", scrapedShoeList.substring(0, 200) + "...");
+                } catch (searchError) {
+                    console.error("Search step failed:", searchError);
+                    // Continue anyway with database
+                    scrapedShoeList = "Using internal database due to search unavailability.";
+                }
 
                 // STEP 2: Expert sizing analysis
+                console.log("Step 2: Calculating sizing...");
                 const shoeDBString = JSON.stringify(SHOE_DB.filter(s => s.proven), null, 2);
 
-                const systemPrompt_Shoe = `You are SendGuide, the most accurate climbing shoe sizing expert.
+                const systemPrompt_Shoe = `You are SendGuide, an expert climbing shoe fitter.
 
-SIZING ALGORITHM (from street size):
-**La Sportiva:**
-- Stiff models (Miura, TC Pro, Katana): -1.5 to -2.0 sizes
-- Soft models (Futura, Theory, Solution Comp, Skwama): -1.0 to -1.5 sizes
+SIZING RULES (from street size):
+La Sportiva: Downsize 1.0-2.0 sizes depending on stiffness
+Scarpa: Downsize 0.5-1.5 sizes  
+Five Ten: Street size to -0.5
+Evolv: Street size or +0.5
+Tenaya: Downsize 1.0-1.5
 
-**Scarpa:**
-- Stiff/moderate (Instinct VS, Vapor V): -1.0 to -1.5 sizes
-- Soft (Drago, Furia S): -0.5 to -1.0 sizes
+Fit preference adjustment:
+- Comfort: Less downsize
+- Balanced: Standard  
+- Performance: More downsize
 
-**Five Ten:** -0.0 to -0.5 sizes (often street size)
-**Evolv:** Street size or +0.5
-**Tenaya:** -1.0 to -1.5 sizes
-
-Adjust based on fit preference:
-- Comfort: Reduce downsize by 0.5
-- Balanced: Standard downsize
-- Performance: Add 0.5 to downsize (maximum comfort threshold)
-
-Return ONLY valid JSON:
+CRITICAL: Return ONLY a valid JSON object with NO markdown, NO backticks, NO extra text:
 {
-  "brand": "String",
-  "model": "String",
-  "recommendedSizeEU": Number,
-  "currentPriceEU": Number,
-  "productURL": "String or null",
-  "productImageURL": "String or null",
-  "discountMessage": "String or null",
-  "reasoning": "String - explain sizing calculation",
-  "optimizedFor": "String"
+  "brand": "Brand Name",
+  "model": "Model Name",
+  "recommendedSizeEU": 40.5,
+  "currentPriceEU": 179,
+  "productURL": null,
+  "productImageURL": null,
+  "discountMessage": null,
+  "reasoning": "Explanation of sizing choice",
+  "optimizedFor": "Performance or Comfort or Balanced"
 }`;
 
-                const userPrompt_Shoe = `User profile:
-- Street Size: ${streetSize} EU
-- Shape: ${shape}
-- Level: ${level}
-- Style: ${style}
-- Fit Preference: ${fitText}
-- Budget: €${budget}
+                const userPrompt_Shoe = `User: Street size ${streetSize} EU, ${shape} foot, ${level} level, ${style} style, ${fitText} fit preference, €${budget} budget.
 
-Live inventory from bergfreunde.eu:
+Available shoes research:
 ${scrapedShoeList}
 
-Classic proven models database:
+Proven models database:
 ${shoeDBString}
 
-Select the single best IN-STOCK shoe. Calculate exact EU size using the algorithm. Include direct product URL and image.`;
+Select ONE best shoe and calculate exact size. Return ONLY the JSON object.`;
 
+                console.log("Calling Gemini API for sizing...");
                 const jsonResponse = await callGemini(systemPrompt_Shoe, userPrompt_Shoe, true, false);
-                const shoeData = JSON.parse(jsonResponse.text);
+                console.log("Raw API response:", jsonResponse.text.substring(0, 300));
+                
+                // Clean the response
+                let cleanedText = jsonResponse.text.trim();
+                // Remove markdown code blocks if present
+                cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+                
+                console.log("Cleaned response:", cleanedText.substring(0, 300));
+                
+                const shoeData = JSON.parse(cleanedText);
+                console.log("Parsed shoe data:", shoeData);
+                
                 displayResult(shoeData, scrapedSources);
+                console.log("=== SENDGUIDE DEBUG SUCCESS ===");
 
             } catch (error) {
-                console.error("Error in calculateFit:", error);
+                console.error("=== SENDGUIDE DEBUG ERROR ===");
+                console.error("Error details:", error);
+                console.error("Error stack:", error.stack);
+                
                 errorBox.classList.remove('hidden');
                 
-                let userFriendlyError = "An error occurred. Please try again.";
+                let userFriendlyError = "An error occurred. Please check the browser console (F12) for details.";
+                
                 if (error.message.includes("API_ERROR_403")) {
-                    userFriendlyError = "<b>API Key Restriction Error (403):</b> Your Google API key's website restrictions are blocking this request. Please verify your domain settings in Google Cloud Console match exactly: <code>ivant24-ai.github.io/*</code> and <code>ivangtodorov24.wixsite.com/*</code>";
+                    userFriendlyError = "<b>API Blocked (403):</b> Your API key restrictions are blocking this request.<br><br>Fix: Go to Google Cloud Console → Credentials → Your API Key<br>Under 'Website restrictions', add:<br><code>" + window.location.hostname + "/*</code>";
                 } else if (error.message.includes("API_ERROR_400")) {
-                    userFriendlyError = "<b>Invalid Request (400):</b> Check that your API key is valid and the Generative Language API is enabled in Google Cloud.";
+                    userFriendlyError = "<b>Invalid API Key (400):</b> Your API key might be incorrect or the Generative Language API isn't enabled.<br><br>Get a new key at: <a href='https://aistudio.google.com/app/apikey' target='_blank' class='underline'>Google AI Studio</a>";
                 } else if (error.message.includes("API_ERROR_429")) {
-                    userFriendlyError = "<b>Rate Limit (429):</b> Too many requests. Please wait a moment and try again.";
+                    userFriendlyError = "<b>Rate Limit (429):</b> Too many requests. Please wait 60 seconds and try again.";
                 } else if (error.message.includes("MISSING_API_KEY")) {
-                    userFriendlyError = "<b>API Key Missing:</b> Please add your Google API key at the top of the script section in index.html. Get one at <a href='https://aistudio.google.com/app/apikey' target='_blank' class='underline'>Google AI Studio</a>.";
+                    userFriendlyError = "<b>No API Key Found:</b> Please add your Google Gemini API key to the code.<br><br>Get one at: <a href='https://aistudio.google.com/app/apikey' target='_blank' class='underline'>Google AI Studio</a>";
+                } else if (error.message.includes("JSON")) {
+                    userFriendlyError = "<b>Response Format Error:</b> The AI returned invalid data. Please try again.<br><br>Technical: " + error.message;
                 } else {
-                    userFriendlyError = `<b>Error:</b> ${error.message}`;
+                    userFriendlyError = `<b>Unexpected Error:</b> ${error.message}<br><br>Please open browser console (F12) for details.`;
                 }
+                
                 errorBox.innerHTML = userFriendlyError;
                 
             } finally {
@@ -758,11 +838,16 @@ Give me ONE specific training tip to progress with these shoes.`;
             const buyLink = document.getElementById('buyLink');
             let targetURL = shoeData.productURL || `https://www.bergfreunde.eu/search/?query=${encodeURIComponent(shoeData.brand + ' ' + shoeData.model)}`;
             
+            console.log("Target URL:", targetURL);
+            console.log("Affiliate ID present:", !!YOUR_AWIN_AFFILIATE_ID && !YOUR_AWIN_AFFILIATE_ID.includes("YOUR_AWIN"));
+            
             if (YOUR_AWIN_AFFILIATE_ID && !YOUR_AWIN_AFFILIATE_ID.includes("YOUR_AWIN")) {
                 const encodedURL = encodeURIComponent(targetURL);
                 buyLink.href = `https://www.awin1.com/cread.php?awinmid=${BERGFREUNDE_AWIN_MID}&awinaffid=${YOUR_AWIN_AFFILIATE_ID}&ued=${encodedURL}`;
+                console.log("Using affiliate link");
             } else {
                 buyLink.href = targetURL;
+                console.log("Using direct link (no affiliate)");
             }
             
             const discountCard = document.getElementById('discountAlertCard');
